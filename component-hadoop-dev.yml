@@ -26,7 +26,8 @@ application:
       cloudera_search_version:                "bind(workflow#input.cloudera_search_version)"
       cloudera_impala_version:                "bind(workflow#input.cloudera_impala_version)"
       metastore_root_password:                "bind(workflow#input.metastore_root_password)"
-#    management:
+    management:
+      upload-dataset:                         "bind(workflow#actions.upload-dataset)"
 #     add-pig-to-cluster:                     "bind(workflow#actions.add-pig-to-cluster)"
 #     add-solr-to-cluster:                    "bind(workflow#actions.add-solr-to-cluster)"
     Cloudera:
@@ -75,7 +76,8 @@ application:
           cloudera_search_version:            configuration(string)
           cloudera_impala_version:            configuration(string)
           metastore_root_password:            configuration(string)
-        # actions:
+        actions:
+          upload-dataset: receive-command(string datasetpath, string dstpath, string awsAccessId, string awsSecretKey)
         #   add-pig-to-cluster: receive-command(string repository_url, string cloudera_hadoop_version)
         #   add-solr-to-cluster: receive-command(string repository_url, string cloudera_hadoop_version, string cloudera_search_version, string MasterDns, string ManagerDns, string DataDns)
         result:  # should be string instead of list<string>
@@ -607,6 +609,88 @@ application:
                             recipeUrl: "{$.cookbooks_url}"
                             runList: [ "recipe[cloudera::flume_pkg]" ]
 
+                    - install-pig:
+                        action: chefrun
+                        phase: install-pig
+                        precedingPhases: [ install-flume-pkg ]
+                        parameters:
+                            isSudo: true
+                            isSolo: true
+                            roles: [ "manager" ]
+                            recipeUrl: "{$.cookbooks_url}"
+                            runList: [ "recipe[cloudera::pig]" ]
+                            jattrs:
+                                cloudera:
+                                    hadoop:
+                                        version: "{$.cloudera_hadoop_version}"
+                                    repository_url: "{$.repository_url}"
+
+                    - install-solr-pkg:
+                        action: chefrun
+                        phase: install-solr-pkg
+                        precedingPhases: [ install-pig ]
+                        parameters:
+                            isSudo: true
+                            isSolo: true
+                            roles: [ "master", "manager", "datanode" ]
+                            recipeUrl: "{$.cookbooks_url}"
+                            runList: [ "recipe[cloudera::solr_pkg]" ]
+                            jattrs:
+                                cloudera:
+                                    search:
+                                        version: "{$.cloudera_search_version}"
+                                    hadoop:
+                                        version: "{$.cloudera_hadoop_version}"
+                                    manager:
+                                        version: "{$.cloudera_manager_version}"
+                                    repository_url: "{$.repository_url}"
+
+                    - start-solr:
+                        action: chefrun
+                        phase: start-solr
+                        precedingPhases: [ install-solr-pkg ]
+                        parameters:
+                            isSudo: true
+                            isSolo: true
+                            roles: [ "master" ]
+                            recipeUrl: "{$.cookbooks_url}"
+                            runList: [ "recipe[cloudera::solr_start]" ]
+                            jattrs:
+                                cloudera:
+                                    master:
+                                        host: "{$.masterDns[*]}"
+                                    manager:
+                                        host: "{$.managerDns[*][0]}"
+                                        version: "{$.cloudera_manager_version}"
+                                    datanode:
+                                        hosts: "{$.datanodeDns[*]}"
+                                    hadoop:
+                                        version: "{$.cloudera_hadoop_version}"
+                                    repository_url: "{$.repository_url}"
+
+                    - install-ks-indexer:
+                        action: chefrun
+                        phase: install-ks-indexer
+                        precedingPhases: [ start-solr ]
+                        parameters:
+                            isSudo: true
+                            isSolo: true
+                            roles: [ "master" ]
+                            recipeUrl: "{$.cookbooks_url}"
+                            runList: [ "recipe[cloudera::search]" ]
+                            jattrs:
+                                cloudera:
+                                    master:
+                                        host: "{$.masterDns[*]}"
+                                    manager:
+                                        host: "{$.managerDns[*][0]}"
+                                        version: "{$.cloudera_manager_version}"
+                                    datanode:
+                                        hosts: "{$.datanodeDns[*]}"
+                                    hadoop:
+                                        version: "{$.cloudera_hadoop_version}"
+                                    repository_url: "{$.repository_url}"
+
                 return:
                     - Oozie_Server:
                         description:                "Oozie server node"
@@ -678,96 +762,6 @@ application:
                         description:                "Url to Cloudera Api"
                         value:                      "http://{$.managerIp}:7180/api/v3/clusters/Default/"
 
-# ToDo Probably Solr and pig are not used un our workflow and could be removed
-            add-pig-to-cluster:
-                steps:
-                    - install-pig:
-                        action: chefrun
-                        phase: install-pig
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "manager" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::pig]" ]
-                            jattrs:
-                                cloudera:
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-                                    repository_url: "{$.repository_url}"
-
-            add-solr-to-cluster:
-                steps:
-                    - install-solr-pkg:
-                        action: chefrun
-                        phase: install-solr-pkg
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "master", "manager", "datanode" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::solr_pkg]" ]
-                            jattrs:
-                                cloudera:
-                                    search:
-                                        version: "{$.cloudera_search_version}"
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-                                    manager:
-                                        version: "{$.cloudera_manager_version}"
-                                    repository_url: "{$.repository_url}"
-
-                    - start-solr:
-                        action: chefrun
-                        phase: start-solr
-                        precedingPhases: [ install-solr-pkg ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "master" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::solr_start]" ]
-                            jattrs:
-                                cloudera:
-                                    master:
-                                        host: "{$.['MasterDns']}"
-                                    manager:
-                                        host: "{$.['ManagerDns']}"
-                                        version: "{$.cloudera_manager_version}"
-                                    datanode:
-                                        hosts: "{$.['DataDns']}"
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-                                    repository_url: "{$.repository_url}"
-
-            add-ks-indexer-to-cluster:
-                steps:
-                    - calling-macro:
-                        action: add-solr-to-cluster
-                        phase: install-solr
-
-                    - install-ks-indexer:
-                        action: chefrun
-                        phase: install-ks-indexer
-                        precedingPhases: [ install-solr ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "master" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::search]" ]
-                            jattrs:
-                                cloudera:
-                                    master:
-                                        host: "{$.['node.MasterDns']}"
-                                    manager:
-                                        host: "{$.['node.ManagerDns']}"
-                                        version: "{$.cloudera_manager_version}"
-                                    datanode:
-                                        hosts: "{$.['node.DataDns']}"
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-                                    repository_url: "{$.repository_url}"
 
             upload-dataset:
                 parameters:
@@ -801,11 +795,11 @@ application:
                             runList: [ "recipe[cloudera::upload_data]" ]
                             jattrs:
                                 dataset:
-                                    src_path: "${datasetpath}"
-                                    dst_path: "${dstpath}"
+                                    src_path: "{$.datasetpath}"
+                                    dst_path: "{$.dstpath}"
                                 aws:
-                                    accessId: "${awsAccessId}"
-                                    secretKey: "${awsSecretKey}"
+                                    accessId: "{$.awsAccessId}"
+                                    secretKey: "{$.awsSecretKey}"
 
             .provision-node:
                 parameters:
