@@ -748,7 +748,7 @@ application:
                         value:                      "http://{$.managerIp}:60010"
                     - cloudera_Manager:
                         description:                "Cloudera Manager"
-                        value:                      "http://{$.managerIp}:7180 (admin/admin)"
+                        value:                      "http://{$.managerIp}:7180"
                     - hue_url:
                         description:                "Hue URL"
                         value:                      "http://{$.managerIp}:8888"
