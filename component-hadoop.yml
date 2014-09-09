@@ -814,11 +814,11 @@ application:
                         action: provisionAmazonVm
                         phase: provision
                         parameters:
-                            roleName: ${roleName}
+                            roleName: "{$.roleName}"
                             imageId: "{$.cdh_ami}"
                             vmIdentity: root
-                            hardwareId: ${hardwareId}
-                            quantity: ${quantity}
+                            hardwareId: "{$.hardwareId}"
+                            quantity: "{$.quantity}"
                             jcloudsNodeNamePrefix: "{$.cluster_prefix}"
                         output:
                             PublicIPs: ips
@@ -828,7 +828,7 @@ application:
                         precedingPhases: [ provision ]
                         parameters:
                             isSudo: true
-                            roles: [ "${roleName}" ]
+                            roles: [ "{$.roleName}" ]
                             command:
                                 - bash
                                 - "-c"
@@ -845,7 +845,7 @@ application:
                         parameters:
                             isSudo: true
                             isSolo: true
-                            roles: [ "${roleName}" ]
+                            roles: [ "{$.roleName}" ]
                             runList: ["recipe[ntp]"]
                             recipeUrl: "{$.cookbooks_url}"
                             jattrs:
@@ -857,7 +857,7 @@ application:
                         parameters:
                           isSudo: true
                           isSolo: true
-                          roles: [ "${roleName}" ]
+                          roles: [ "{$.roleName}" ]
                           runList: ["cloudera::cdh_repo"]
                           recipeUrl: "{$.cookbooks_url}"
                           jattrs:
