@@ -158,7 +158,7 @@ application:
                             isSolo: true
                             roles: [ "datanode", "manager", "master" ]
                             recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[utils::ephemeral]" ]
+                            runList: [ "recipe[cloudera::ephemeral]" ]
 
                     - update-hosts:
                         action: chefrun
@@ -169,7 +169,7 @@ application:
                             isSolo: true
                             roles: [ "datanode", "manager", "master" ]
                             recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[base::hosts_aws]" ]
+                            runList: [ "recipe[cloudera::hosts_aws]" ]
                             jattrs:
                                 base:
                                     hosts_aws: [ "{$.masterDns[*]}", "{$.managerDns[*]}", "{$.datanodeDns[*]}" ]
@@ -608,7 +608,7 @@ application:
                             roles: [ "master", "manager", "datanode" ]
                             recipeUrl: "{$.cookbooks_url}"
                             runList: [ "recipe[cloudera::flume_pkg]" ]
-
+                            
                     - install-pig:
                         action: chefrun
                         phase: install-pig
@@ -667,7 +667,7 @@ application:
                                     hadoop:
                                         version: "{$.cloudera_hadoop_version}"
                                     repository_url: "{$.repository_url}"
-
+                    
                     - install-ks-indexer:
                         action: chefrun
                         phase: install-ks-indexer
@@ -748,7 +748,7 @@ application:
                         value:                      "http://{$.managerIp}:60010"
                     - cloudera_Manager:
                         description:                "Cloudera Manager"
-                        value:                      "http://{$.managerIp}:7180"
+                        value:                      "http://{$.managerIp}:7180 (admin/admin)"
                     - hue_url:
                         description:                "Hue URL"
                         value:                      "http://{$.managerIp}:8888"
@@ -821,7 +821,7 @@ application:
                             quantity: ${quantity}
                             jcloudsNodeNamePrefix: "{$.cluster_prefix}"
                         output:
-                            Privateips: privateips
+                            PublicIPs: ips
                     - set-hostname:
                         action: execrun
                         phase: post-provision
@@ -833,7 +833,7 @@ application:
                                 - bash
                                 - "-c"
                                 - |
-                                    hostname `curl -s http://169.254.169.254/latest/meta-data/hostname` &&
+                                    hostname `curl -s http://169.254.169.254/latest/meta-data/public-hostname` &&
                                     echo "`hostname -i`   `hostname`" >> /etc/hosts &&
                                     hostname
                         output:
@@ -846,8 +846,11 @@ application:
                             isSudo: true
                             isSolo: true
                             roles: [ "${roleName}" ]
-                            runList: ["recipe[utils::ntp]"]
+                            runList: ["recipe[ntp]"]
                             recipeUrl: "{$.cookbooks_url}"
+                            jattrs:
+                              ntp:
+                                servers: ["0.amazon.pool.ntp.org"]
                     - add-cdh-repo:
                         action: chefrun
                         precedingPhases: [ post-provision ]
@@ -864,6 +867,6 @@ application:
                                 version: "{$.cloudera_hadoop_version}"
                 return:
                     ips:
-                        value: "{$.Privateips}"
+                        value: "{$.PublicIPs}"
                     dns:
                         value: "{$.dns}"
