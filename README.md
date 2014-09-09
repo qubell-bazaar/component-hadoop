@@ -1,8 +1,8 @@
 component-hadoop
 ================
 
-![](http://hadoop.apache.org/images/hadoop-logo.jpg) ![](http://www.uk.capgemini.com/sites/default/files/en-gb/2014/07/cloudera-logo.png)
-![](http://www.cloudera.com/content/dam/cloudera/support/ungated/icons/highres_236245562.jpeg) ![](http://www.cloudera.com/content/dam/cloudera/support/ungated/icons/SQOOP-99d7b6cb4cccb48e.png) ![](http://www.cloudera.com/content/dam/cloudera/support/ungated/icons/impala-logo.png) ![](http://www.cloudera.com/content/dam/cloudera/product-assets/cloudera_search_logo.png)
+![](http://hadoop.apache.org/images/hadoop-logo.jpg = 250x) ![](http://www.uk.capgemini.com/sites/default/files/en-gb/2014/07/cloudera-logo.png = 250x)
+![](http://www.cloudera.com/content/dam/cloudera/support/ungated/icons/highres_236245562.jpeg = 250x) ![](http://www.cloudera.com/content/dam/cloudera/support/ungated/icons/SQOOP-99d7b6cb4cccb48e.png = 250x ) ![](http://www.cloudera.com/content/dam/cloudera/support/ungated/icons/impala-logo.png = 250x) ![](http://www.cloudera.com/content/dam/cloudera/product-assets/cloudera_search_logo.png = 250x)
 
 Installs and configures Cloudera Hadoop
 
