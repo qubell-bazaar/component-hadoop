@@ -3,7 +3,7 @@ kit:
   link: https://github.com/qubell-bazaar/component-hadoop
   applications:
     - name: "CD Hadoop"
-      manifest: https://raw.github.com/qubell-bazaar/component-hadoop/v0.1.0/component-hadoop.yml
+      manifest: https://raw.github.com/qubell-bazaar/component-hadoop/1.0-30p/component-hadoop.yml
   provider:
     name: "Qubell"
     link: http://qubell.com
