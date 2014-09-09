@@ -17,7 +17,7 @@ from qubell.api.private.testing import instance, environment, workflow, values
     #    }]
     #}
 })
-class JenkinsDevComponentTestCase(BaseComponentTestCase):
+class ClouderaHadoopComponentTestCase(BaseComponentTestCase):
     name = "component-hadoop"
     apps = [{
         "name": name,
