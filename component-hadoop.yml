@@ -3,7 +3,7 @@ application:
     input.repository_url:                     "http://archive.cloudera.com" # origin cloudera archive: "http://archive.cloudera.com"
     input.cdh_ami:                            "us-east-1/ami-ee698586"
     input.cluster_prefix:                     "cdh_default_name"
-    input.cookbooks_url:                      "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-430df78.tar.gz"
+    input.cookbooks_url:                      "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-7202362.tar.gz"
     input.datanodes:                          "5"
     input.master_hardware:                    "m3.large"
     input.datanode_hardware:                  "m3.large"
