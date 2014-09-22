@@ -260,6 +260,7 @@ application:
                             roles: [ "manager" ]
                             recipeUrl: "{$.cookbooks_url}"
                             runList: [ "recipe[cloudera::cms]" ]
+                            retryCount: 2
                             jattrs:
                                 cloudera:
                                     manager:
