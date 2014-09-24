@@ -497,48 +497,12 @@ application:
                                         version: "{$.cloudera_hadoop_version}"
                                     repository_url: "{$.repository_url}"
 
-                    - install-hue:
-                        action: chefrun
-                        phase: install-hue
-                        precedingPhases: [ install-oozie ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "manager" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::hue]" ]
-                            jattrs:
-                                cloudera:
-                                    manager:
-                                        host: "{$.managerDns[*][0]}"
-                                        version: "{$.cloudera_manager_version}"
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-                                    repository_url: "{$.repository_url}"
-
-                    - start-hue:
-                        action: chefrun
-                        phase: start-hue
-                        precedingPhases: [ install-hue ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "manager" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::restart_hue]" ]
-                            jattrs:
-                                cloudera:
-                                    manager:
-                                        host: "{$.managerDns[*][0]}"
-                                        version: "{$.cloudera_manager_version}"
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-                                    repository_url: "{$.repository_url}"
+                    
 
                     - install-impala-pkg:
                         action: chefrun
                         phase: install-impala-pkg
-                        precedingPhases: [ start-hue ]
+                        precedingPhases: [ start-oozie ]
                         parameters:
                             isSudo: true
                             isSolo: true
@@ -688,6 +652,44 @@ application:
                                         version: "{$.cloudera_manager_version}"
                                     datanode:
                                         hosts: "{$.datanodeDns[*]}"
+                                    hadoop:
+                                        version: "{$.cloudera_hadoop_version}"
+                                    repository_url: "{$.repository_url}"
+                                    
+                    - install-hue:
+                        action: chefrun
+                        phase: install-hue
+                        precedingPhases: [ start-solr ]
+                        parameters:
+                            isSudo: true
+                            isSolo: true
+                            roles: [ "manager" ]
+                            recipeUrl: "{$.cookbooks_url}"
+                            runList: [ "recipe[cloudera::hue]" ]
+                            jattrs:
+                                cloudera:
+                                    manager:
+                                        host: "{$.managerDns[*][0]}"
+                                        version: "{$.cloudera_manager_version}"
+                                    hadoop:
+                                        version: "{$.cloudera_hadoop_version}"
+                                    repository_url: "{$.repository_url}"
+
+                    - start-hue:
+                        action: chefrun
+                        phase: start-hue
+                        precedingPhases: [ install-hue ]
+                        parameters:
+                            isSudo: true
+                            isSolo: true
+                            roles: [ "manager" ]
+                            recipeUrl: "{$.cookbooks_url}"
+                            runList: [ "recipe[cloudera::restart_hue]" ]
+                            jattrs:
+                                cloudera:
+                                    manager:
+                                        host: "{$.managerDns[*][0]}"
+                                        version: "{$.cloudera_manager_version}"
                                     hadoop:
                                         version: "{$.cloudera_hadoop_version}"
                                     repository_url: "{$.repository_url}"
