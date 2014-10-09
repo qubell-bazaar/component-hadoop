@@ -1,15 +1,16 @@
 application:
   configuration:
     input.repository_url:                     "http://archive.cloudera.com" # origin cloudera archive: "http://archive.cloudera.com"
-    input.cdh_ami:                            "us-east-1/ami-ee698586"
+    input.cdh_ami:                            "us-west-1/ami-0e073d4b"
+    #input.cdh_ami:                            "us-east-1/ami-ee698586"
     input.cluster_prefix:                     "cdh_default_name"
-    input.cookbooks_url:                      "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-d1ef4c3.tar.gz"
+    input.cookbooks_url:                      "https://dl.dropboxusercontent.com/u/250836/hadoop.tar.gz"
     input.datanodes:                          "5"
     input.master_hardware:                    "m3.large"
     input.datanode_hardware:                  "m3.large"
-    input.cloudera_hadoop_version:            "4.4.0"
-    input.cloudera_manager_version:           "4.6.3"
-    input.cloudera_search_version:            "1.1.0"
+    input.cloudera_hadoop_version:            "5.1.3"
+    input.cloudera_manager_version:           "5.1.3"
+    input.cloudera_search_version:            "1.3.0"
     input.cloudera_impala_version:            "1.4.0"
     input.metastore_root_password:            "hive"
   interfaces:
@@ -281,6 +282,8 @@ application:
                                     services: [ "hdfs" ]
                                     manager:
                                         host: "{$.managerDns[*][0]}"
+                                    hadoop:
+                                        version: "{$.cloudera_hadoop_version}"
                                     clusters:
                                         default:
                                             services:
@@ -329,10 +332,11 @@ application:
                                 - bash
                                 - '-c'
                                 - |
-                                  su hdfs -c "hadoop fs -mkdir /tmp";
+                                  su hdfs -c "hadoop fs -mkdir -p /tmp";
                                   su hdfs -c "hadoop fs -chmod 1777 /tmp";
                                   su hdfs -c "hadoop fs -mkdir /hbase";
                                   su hdfs -c "hadoop fs -chown hbase:hbase /hbase";
+                                  su hdfs -c "hadoop fs -mkdir /user";
                                   su hdfs -c "hadoop fs -mkdir /user/mapred";
                                   su hdfs -c "hadoop fs -chown mapred:mapred /user/mapred";
 
@@ -352,6 +356,8 @@ application:
                                     manager:
                                         host: "{$.managerDns[*][0]}"
                                     repository_url: "{$.repository_url}"
+                                    hadoop:
+                                        version: "{$.cloudera_hadoop_version}"
 
                     - install-hbase:
                         action: chefrun
@@ -446,18 +452,18 @@ application:
                                     hadoop:
                                         version: "{$.cloudera_hadoop_version}"
                                     repository_url: "{$.repository_url}"
-                    - wait-hive:
-                        action: wait
-                        description: "wait hive"
-                        phase: wait-hive
-                        precedingPhases: [services-hive]
-                        parameters:
-                          delay: 600
+                    #- wait-hive:
+                    #    action: wait
+                    #    description: "wait hive"
+                    #    phase: wait-hive
+                    #    precedingPhases: [services-hive]
+                    #    parameters:
+                    #      delay: 600
 
                     - install-oozie:
                         action: chefrun
                         phase: install-oozie
-                        precedingPhases: [ wait-hive ]
+                        precedingPhases: [ services-hive ]
                         parameters:
                             isSudo: true
                             isSolo: true
@@ -473,6 +479,7 @@ application:
                                         host: "{$.managerDns[*][0]}"
                                         version: "{$.cloudera_manager_version}"
                                     jobtracker:
+                                        host: "{$.managerDns[*][0]}"
                                         ip: "{$.managerIp[0]}"
                                     hadoop:
                                         version: "{$.cloudera_hadoop_version}"
@@ -496,8 +503,6 @@ application:
                                     hadoop:
                                         version: "{$.cloudera_hadoop_version}"
                                     repository_url: "{$.repository_url}"
-
-                    
 
                     - install-impala-pkg:
                         action: chefrun
@@ -632,7 +637,7 @@ application:
                                     hadoop:
                                         version: "{$.cloudera_hadoop_version}"
                                     repository_url: "{$.repository_url}"
-                    
+
                     - install-ks-indexer:
                         action: chefrun
                         phase: install-ks-indexer
@@ -655,11 +660,11 @@ application:
                                     hadoop:
                                         version: "{$.cloudera_hadoop_version}"
                                     repository_url: "{$.repository_url}"
-                                    
+
                     - install-hue:
                         action: chefrun
                         phase: install-hue
-                        precedingPhases: [ start-solr ]
+                        precedingPhases: [ install-ks-indexer ]
                         parameters:
                             isSudo: true
                             isSolo: true
@@ -825,10 +830,27 @@ application:
                             jcloudsNodeNamePrefix: "{$.cluster_prefix}"
                         output:
                             PublicIPs: ips
+                    - link-folders:
+                        action: execrun
+                        precedingPhases: [ provision ]
+                        parameters:
+                          isSudo: true
+                          roles: [ "{$.roleName}" ]
+                          command:
+                              - bash
+                              - "-c"
+                              - |
+                                    mkdir -p /srv &&
+                                    mkdir -p /opt/srv &&
+                                    mkdir -p /opt/tmp &&
+                                    chmod -R 777 /opt/srv &&
+                                    chmod -R 777 /opt/tmp &&
+                                    mount --bind /opt/tmp /tmp &&
+                                    mount --bind /opt/srv /srv
                     - set-hostname:
                         action: execrun
                         phase: post-provision
-                        precedingPhases: [ provision ]
+                        precedingPhases: [ link-folders ]
                         parameters:
                             isSudo: true
                             roles: [ "{$.roleName}" ]
@@ -844,7 +866,7 @@ application:
                     - install-ntp:
                         action: chefrun
                         phase: post-provision
-                        precedingPhases: [ provision ]
+                        precedingPhases: [ link-folders ]
                         parameters:
                             isSudo: true
                             isSolo: true
