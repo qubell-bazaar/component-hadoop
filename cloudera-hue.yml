@@ -41,7 +41,7 @@ application:
           DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
         cloudera-solr:
-          Solr_Uri: consume-signal(string)
+          Solr_Uri: consume-signal(list<string>)
         result:
           hue_url: publish-signal(list<string>)
       required: [vms, cloudera-solr]
