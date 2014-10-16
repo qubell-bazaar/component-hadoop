@@ -11,23 +11,36 @@ application:
     input.repository_url: "http://archive.cloudera.com"
     input.cloudera_hadoop_version: "5.1.3"
     input.cloudera_manager_version: "5.1.3"
-    #input.cloudera_search_version: "1.3.0"
+    input.cloudera_search_version: "1.3.0"
     input.cloudera_impala_version: "1.4.0"
     input.metastore_root_password: "hive"
   interfaces:
     input:
+      #ami: "bind(vms#input.ami)"
+      #identity: "bind(vms#input.identity, cloudera-manager#input.identity, cloudera-hadoop#input.identity, cloudera-hive#input.identity, cloudera-oozie#input.identity, cloudera-impala#input.identity)"
+      #master_hardware: "bind(vms#input.master_hardware)"
+      #datanode_hardware: "bind(vms#input.datanode_hardware)"
+      #datanodes_quantity: "bind(vms#input.datanodes_quantity)"
+      #cluster_prefix: "bind(vms#input.cluster_prefix)"
+      #cookbooks_url: "bind(vms#input.cookbooks_url, cloudera-manager#input.cookbooks_url, cloudera-hadoop#input.cookbooks_url, cloudera-hive#input.cookbooks_url, cloudera-oozie#input.cookbooks_url, cloudera-impala#input.cookbooks_url)"
+      #repository_url: "bind(cloudera-manager#input.repository_url, cloudera-hadoop#input.repository_url, cloudera-hive#input.repository_url, cloudera-oozie#input.repository_url, cloudera-impala#input.repository_url)"
+      #cloudera_manager_version: "bind(cloudera-manager#input.cloudera_manager_version, cloudera-hadoop#input.cloudera_manager_version, cloudera-hive#input.cloudera_manager_version, cloudera-oozie#input.cloudera_manager_version, cloudera-impala#input.cloudera_manager_version)"
+      #cloudera_hadoop_version: "bind(cloudera-hadoop#input.cloudera_hadoop_version, cloudera-hive#input.cloudera_hadoop_version, cloudera-oozie#input.cloudera_hadoop_version, cloudera-impala#input.cloudera_hadoop_version)"
+      #metastore_root_password: "bind(cloudera-hive#input.metastore_root_password)"
+      #cloudera_impala_version: "bind(cloudera-impala#input.cloudera_impala_version)"
       ami: "bind(vms#input.ami)"
-      identity: "bind(vms#input.identity, cloudera-manager#input.identity, cloudera-hadoop#input.identity, cloudera-hive#input.identity, cloudera-oozie#input.identity, cloudera-impala#input.identity)"
+      identity: "bind(vms#input.identity, cloudera-manager#input.identity, cloudera-hadoop#input.identity, cloudera-hive#input.identity, cloudera-oozie#input.identity, cloudera-impala#input.identity, cloudera-sqoop#input.identity, cloudera-flume#input.identity, cloudera-pig#input.identity, cloudera-solr#input.identity, cloudera-hue#input.identity)"
       master_hardware: "bind(vms#input.master_hardware)"
       datanode_hardware: "bind(vms#input.datanode_hardware)"
       datanodes_quantity: "bind(vms#input.datanodes_quantity)"
       cluster_prefix: "bind(vms#input.cluster_prefix)"
-      cookbooks_url: "bind(vms#input.cookbooks_url, cloudera-manager#input.cookbooks_url, cloudera-hadoop#input.cookbooks_url, cloudera-hive#input.cookbooks_url, cloudera-oozie#input.cookbooks_url, cloudera-impala#input.cookbooks_url)"
-      repository_url: "bind(cloudera-manager#input.repository_url, cloudera-hadoop#input.repository_url, cloudera-hive#input.repository_url, cloudera-oozie#input.repository_url, cloudera-impala#input.repository_url)"
-      cloudera_manager_version: "bind(cloudera-manager#input.cloudera_manager_version, cloudera-hadoop#input.cloudera_manager_version, cloudera-hive#input.cloudera_manager_version, cloudera-oozie#input.cloudera_manager_version, cloudera-impala#input.cloudera_manager_version)"
-      cloudera_hadoop_version: "bind(cloudera-hadoop#input.cloudera_hadoop_version, cloudera-hive#input.cloudera_hadoop_version, cloudera-oozie#input.cloudera_hadoop_version, cloudera-impala#input.cloudera_hadoop_version)"
+      cookbooks_url: "bind(vms#input.cookbooks_url, cloudera-manager#input.cookbooks_url, cloudera-hadoop#input.cookbooks_url, cloudera-hive#input.cookbooks_url, cloudera-oozie#input.cookbooks_url, cloudera-impala#input.cookbooks_url, cloudera-sqoop#input.cookbooks_url, cloudera-flume#input.cookbooks_url, cloudera-pig#input.cookbooks_url, cloudera-solr#input.cookbooks_url, cloudera-hue#input.cookbooks_url)"
+      repository_url: "bind(cloudera-manager#input.repository_url, cloudera-hadoop#input.repository_url, cloudera-hive#input.repository_url, cloudera-oozie#input.repository_url, cloudera-impala#input.repository_url, cloudera-sqoop#input.repository_url, cloudera-flume#input.repository_url, cloudera-pig#input.repository_url, cloudera-solr#input.repository_url, cloudera-hue#input.repository_url)"
+      cloudera_manager_version: "bind(cloudera-manager#input.cloudera_manager_version, cloudera-hadoop#input.cloudera_manager_version, cloudera-hive#input.cloudera_manager_version, cloudera-oozie#input.cloudera_manager_version, cloudera-impala#input.cloudera_manager_version, cloudera-sqoop#input.cloudera_manager_version, cloudera-solr#input.cloudera_manager_version, cloudera-hue#input.cloudera_manager_version)"
+      cloudera_hadoop_version: "bind(cloudera-hadoop#input.cloudera_hadoop_version,cloudera-hive#input.cloudera_hadoop_version, cloudera-oozie#input.cloudera_hadoop_version, cloudera-impala#input.cloudera_hadoop_version, cloudera-sqoop#input.cloudera_hadoop_version, cloudera-flume#input.cloudera_hadoop_version, cloudera-pig#input.cloudera_hadoop_version, cloudera-solr#input.cloudera_hadoop_version, cloudera-hue#input.cloudera_hadoop_version)"
       metastore_root_password: "bind(cloudera-hive#input.metastore_root_password)"
       cloudera_impala_version: "bind(cloudera-impala#input.cloudera_impala_version)"
+      cloudera_search_version: "bind(cloudera-solr#input.cloudera_search_version)"
     Cloudera:
       Manager_URL: "bind(cloudera-manager#cloudera-manager.Manager_URL)"
       Login: "bind(cloudera-manager#cloudera-manager.Login)"
@@ -38,10 +51,20 @@ application:
     - [vms, cloudera-hive]
     - [vms, cloudera-oozie]
     - [vms, cloudera-impala]
+    - [vms, cloudera-sqoop]
+    - [vms, cloudera-flume]
+    - [vms, cloudera-pig]
+    - [vms, cloudera-solr]
+    - [vms, cloudera-hue]
     - [cloudera-hadoop, cloudera-manager]
     - [cloudera-hive, cloudera-hadoop]
     - [cloudera-oozie, cloudera-hive]
     - [cloudera-impala, cloudera-oozie]
+    - [cloudera-sqoop, cloudera-impala]
+    - [cloudera-flume, cloudera-sqoop]
+    - [cloudera-pig, cloudera-flume]
+    - [cloudera-solr, cloudera-pig]
+    - [cloudera-hue, cloudera-solr]
   components:
     vms:
       type: workflow.Instance
@@ -396,6 +419,120 @@ application:
           Oozie_Server: consume-signal(list<string>)
         cloudera-impala:
           Impala_Master: publish-signal(list<string>)
+    cloudera-sqoop:
+      type: reference.Submodule
+      configuration:
+        __locator.application-id: "cloudera-sqoop"
+      required: [vms, cloudera-impala]
+      interfaces:
+        input:
+          identity: configuration(string)
+          repository_url: configuration(string)
+          cookbooks_url: configuration(string)
+          cloudera_hadoop_version: configuration(string)
+          cloudera_manager_version: configuration(string)
+        vms:
+          Node_Manager: consume-signal(list<string>)
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master: consume-signal(list<string>)
+          Node_Master_DNS: consume-signal(string)
+          DataNodes: consume-signal(list<string>)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-impala:
+          Impala_Master: consume-signal(list<string>)
+        cloudera-sqoop:
+          Sqoop_Master: publish-signal(list<string>)
+    cloudera-flume:
+      type: reference.Submodule
+      configuration:
+        __locator.application-id: "cloudera-flume"
+      required: [vms, cloudera-sqoop]
+      interfaces:
+        input:
+          identity: configuration(string)
+          repository_url: configuration(string)
+          cookbooks_url: configuration(string)
+          cloudera_hadoop_version: configuration(string)
+        vms:
+          Node_Manager: consume-signal(list<string>)
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master: consume-signal(list<string>)
+          Node_Master_DNS: consume-signal(string)
+          DataNodes: consume-signal(list<string>)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-sqoop:
+          Sqoop_Master: consume-signal(list<string>)
+        cloudera-flume:
+          Flume_Status: publish-signal(string)
+    cloudera-pig:
+      type: reference.Submodule
+      configuration:
+       __locator.application-id: "cloudera-pig"
+      required: [vms, cloudera-flume]
+      interfaces:
+        input:
+          identity: configuration(string)
+          repository_url: configuration(string)
+          cookbooks_url: configuration(string)
+          cloudera_hadoop_version: configuration(string)
+        vms:
+          Node_Manager: consume-signal(list<string>)
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master: consume-signal(list<string>)
+          Node_Master_DNS: consume-signal(string)
+          DataNodes: consume-signal(list<string>)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-flume:
+          Flume_Status: consume-signal(string)
+        cloudera-pig:
+          Pig_Status: publish-signal(string)
+    cloudera-solr:
+      type: reference.Submodule
+      configuration:
+        __locator.application-id: "cloudera-solr"
+      required: [vms, cloudera-pig]
+      interfaces:
+        input:
+          identity: configuration(string)
+          repository_url: configuration(string)
+          cookbooks_url: configuration(string)
+          cloudera_hadoop_version: configuration(string)
+          cloudera_manager_version: configuration(string)
+          cloudera_search_version: configuration(string)
+        vms:
+          Node_Manager: consume-signal(list<string>)
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master: consume-signal(list<string>)
+          Node_Master_DNS: consume-signal(string)
+          DataNodes: consume-signal(list<string>)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-pig:
+          Pig_Status: consume-signal(string)
+        cloudera-solr:
+          Solr_Uri: publish-signal(string)
+    cloudera-hue:
+      type: reference.Submodule
+      configuration:
+        __locator.application-id: "cloudera-hue"
+      required: [vms, cloudera-solr]
+      interfaces:
+        input:
+          identity: configuration(string)
+          repository_url: configuration(string)
+          cookbooks_url: configuration(string)
+          cloudera_hadoop_version: configuration(string)
+          cloudera_manager_version: configuration(string)
+        vms:
+          Node_Manager: consume-signal(list<string>)
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master: consume-signal(list<string>)
+          Node_Master_DNS: consume-signal(string)
+          DataNodes: consume-signal(list<string>)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-solr:
+          Solr_Uri: consume-signal(string)
+        cloudera-hue:
+          hue_url: publish-signal(list<string>)
 
 
 
