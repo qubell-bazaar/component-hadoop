@@ -17,7 +17,7 @@ application:
       Node_Master_DNS: "bind(cloudera-manager#vms.Node_Master_DNS)"
       DataNodes: "bind(cloudera-manager#vms.DataNodes)"
       DataNodesDNS: "bind(cloudera-manager#vms.DataNodesDNS)"
-    Cloudera:
+    cloudera-manager:
       Manager_URL: "bind(cloudera-manager#result.cloudera_Manager)"
       Login: "bind(cloudera-manager#result.cloudera_Login)"
       Password: "bind(cloudera-manager#result.cloudera_Password)"
