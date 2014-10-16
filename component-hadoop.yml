@@ -29,8 +29,6 @@ application:
       metastore_root_password:                "bind(workflow#input.metastore_root_password)"
     management:
       upload-dataset:                         "bind(workflow#actions.upload-dataset)"
-#     add-pig-to-cluster:                     "bind(workflow#actions.add-pig-to-cluster)"
-#     add-solr-to-cluster:                    "bind(workflow#actions.add-solr-to-cluster)"
     Cloudera:
       Manager:                                "bind(workflow#result.cloudera_Manager)"
       Login:                                  "bind(workflow#result.cloudera_Login)"
@@ -79,8 +77,6 @@ application:
           metastore_root_password:            configuration(string)
         actions:
           upload-dataset: receive-command(string datasetpath, string dstpath, string awsAccessId, string awsSecretKey)
-        #   add-pig-to-cluster: receive-command(string repository_url, string cloudera_hadoop_version)
-        #   add-solr-to-cluster: receive-command(string repository_url, string cloudera_hadoop_version, string cloudera_search_version, string MasterDns, string ManagerDns, string DataDns)
         result:  # should be string instead of list<string>
           NameNode:                           publish-signal(list<string>)
           Primary_NameNode:                   publish-signal(list<string>)
@@ -267,10 +263,25 @@ application:
                                     manager:
                                         host: "{$.managerDns[*][0]}"
 
+                    - install-cdh-packages:
+                        action: chefrun
+                        precedingPhases: [ install-cloudera-cms ]
+                        parameters:
+                            isSudo: true
+                            isSolo: true
+                            roles: ["master", "manager", "datanode"]
+                            runList: ["cloudera::cdh"]
+                            recipeUrl: "{$.cookbooks_url}"
+                            jattrs:
+                                cloudera:
+                                    repository_url: "{$.repository_url}"
+                                hadoop:
+                                    version: "{$.cloudera_hadoop_version}"
+
                     - provision-hadoop:
                         action: chefrun
                         phase: provision-hadoop
-                        precedingPhases: [ install-cms ]
+                        precedingPhases: [ install-cdh-packages ]
                         parameters:
                             isSudo: true
                             isSolo: true
