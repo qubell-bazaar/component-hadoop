@@ -514,7 +514,7 @@ application:
         cloudera-pig:
           Pig_Status: consume-signal(string)
         cloudera-solr:
-          Solr_Uri: publish-signal(string)
+          Solr_Uri: publish-signal(list<string>)
     cloudera-hue:
       type: reference.Submodule
       configuration:
@@ -535,7 +535,7 @@ application:
           DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
         cloudera-solr:
-          Solr_Uri: consume-signal(string)
+          Solr_Uri: consume-signal(list<string>)
         cloudera-hue:
           hue_url: publish-signal(list<string>)
 

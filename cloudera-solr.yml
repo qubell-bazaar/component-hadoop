@@ -46,7 +46,7 @@ application:
         cloudera-pig:
           Pig_Status: consume-signal(string)
         result:
-          Solr_Uri: publish-signal(string)
+          Solr_Uri: publish-signal(list<string>)
       required: [vms, cloudera-pig]
       configuration:
         configuration.triggers: {}
@@ -157,4 +157,4 @@ application:
             return:
               - Solr_Uri:
                   description: "Solr servers url"
-                  value: "http://{$.props.vms.Node_Master_DNS}:8983"
+                  value: "http://{$.props.vms.DataNodesDNS}:8983"

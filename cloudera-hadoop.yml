@@ -271,4 +271,4 @@ application:
                   value: "http://{$.props.vms.Node_Manager}:50030"
               - cloudera_hbaseWebui:
                   description: "Master (HBase)"
-                  value: "http://{$.props.vms.Node_Manager}:60010"
+                  value: "http://{$.props.vms.Node_Master}:60010"
