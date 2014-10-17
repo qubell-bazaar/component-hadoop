@@ -1,0 +1,274 @@
+application:
+  configuration:
+    input.identity: "root"
+    input.cookbooks_url: "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-v5.tar.gz"
+    input.repository_url: "http://archive.cloudera.com"
+    input.cloudera_manager_version: "5.1.3"
+    input.cloudera_hadoop_version: "5.1.3"
+  interfaces:
+    input:
+      identity: "bind(cloudera-hadoop#input.identity)"
+      cookbooks_url: "bind(cloudera-hadoop#input.cookbooks_url)"
+      repository_url: "bind(cloudera-hadoop#input.repository_url)"
+      cloudera_manager_version: "bind(cloudera-hadoop#input.cloudera_manager_version)"
+      cloudera_hadoop_version: "bind(cloudera-hadoop#input.cloudera_hadoop_version)"
+    vms:
+      Node_Manager: "bind(cloudera-hadoop#vms.Node_Manager)"
+      Node_Manager_DNS: "bind(cloudera-hadoop#vms.Node_Manager_DNS)"
+      Node_Master: "bind(cloudera-hadoop#vms.Node_Master)"
+      Node_Master_DNS: "bind(cloudera-hadoop#vms.Node_Master_DNS)"
+      DataNodes: "bind(cloudera-hadoop#vms.DataNodes)"
+      DataNodesDNS: "bind(cloudera-hadoop#vms.DataNodesDNS)"
+    cloudera-manager:
+      Manager_URL: "bind(cloudera-hadoop#cloudera-manager.cloudera_Manager)"
+      Login: "bind(cloudera-hadoop#cloudera-manager.cloudera_Login)"
+      Password: "bind(cloudera-hadoop#cloudera-manager.cloudera_Password)"
+    cloudera-hadoop:
+      NameNode: "bind(cloudera-hadoop#result.NameNode)"
+      Primary_NameNode: "bind(cloudera-hadoop#result.Primary_NameNode)"
+      Secondary_NameNode: "bind(cloudera-hadoop#result.Secondary_NameNode)"
+      Hbase_Master: "bind(cloudera-hadoop#result.Hbase_Master)"
+      Hbase_MasterDns: "bind(cloudera-hadoop#result.Hbase_MasterDns)"
+      JobTracker: "bind(cloudera-hadoop#result.JobTracker)"
+      cloudera_hdfsWebui: "bind(cloudera-hadoop#result.cloudera_hdfsWebui)"
+      cloudera_jobtrackerWebui: "bind(cloudera-hadoop#result.cloudera_jobtrackerWebui)"
+      cloudera_hbaseWebui: "bind(cloudera-hadoop#result.cloudera_hbaseWebui)"
+  components:
+    cloudera-hadoop:
+      type: workflow.Instance
+      interfaces:
+        input:
+          identity: configuration(string)
+          repository_url: configuration(string)
+          cookbooks_url: configuration(string)
+          cloudera_hadoop_version: configuration(string)
+          cloudera_manager_version: configuration(string)
+        vms:
+          Node_Manager: consume-signal(list<string>)
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master: consume-signal(list<string>)
+          Node_Master_DNS: consume-signal(string)
+          DataNodes: consume-signal(list<string>)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-manager:
+          cloudera_Manager: consume-signal(list<string>)
+          cloudera_Login: consume-signal(string)
+          cloudera_Password: consume-signal(string)
+        result:
+          NameNode: publish-signal(list<string>)
+          Primary_NameNode: publish-signal(list<string>)
+          Secondary_NameNode: publish-signal(list<string>)
+          Hbase_Master: publish-signal(list<string>)
+          Hbase_MasterDns: publish-signal(string)
+          JobTracker: publish-signal(list<string>)
+          cloudera_hdfsWebui: publish-signal(list<string>)
+          cloudera_jobtrackerWebui: publish-signal(list<string>)
+          cloudera_hbaseWebui: publish-signal(list<string>)
+      required: [vms, cloudera-manager]
+      configuration:
+        configuration.triggers: {}
+        configuration.workflows:
+          launch:
+            steps:
+              - get-env-props:
+                  action: getEnvironmentProperties
+                  output:
+                    props: result
+              - provision-manager-node:
+                  action: provisionVms
+                  precedingPhases: [ get-env-props ]
+                  parameters:
+                    roleName: "manager"
+                    hardwareId: ""
+                    vmIdentity: "{$.identity}"
+                    staticIps: "{$.props.vms.Node_Manager}"
+                  output:
+                    managerIp: ips
+              - provision-datanode:
+                  action: provisionVms
+                  precedingPhases: [ get-env-props ]
+                  parameters:
+                    roleName: "datanode"
+                    hardwareId: ""
+                    vmIdentity: "{$.identity}"
+                    staticIps: "{$.props.vms.DataNodes}"
+                  output:
+                    datanodeIps: ips
+              - provision-master-node:
+                  action: provisionVms
+                  precedingPhases: [ get-env-props ]
+                  parameters:
+                    roleName: "master"
+                    hardwareId: ""
+                    vmIdentity: "{$.identity}"
+                    staticIps: "{$.props.vms.Node_Master}"
+                  output:
+                    masterIp: ips
+              - add-cdh-repo:
+                  action: chefrun
+                  precedingPhases: [ provision-manager-node, provision-datanode, provision-master-node ]
+                  parameters:
+                    isSudo: true
+                    isSolo: true
+                    roles: [ "master", "manager", "datanode" ]
+                    runList: ["cloudera::cdh_repo"]
+                    recipeUrl: "{$.cookbooks_url}"
+                    jattrs:
+                      cloudera:
+                        repository_url: "{$.repository_url}"
+                        hadoop:
+                          version: "{$.cloudera_hadoop_version}"
+              - install-cdh-packages:
+                  action: chefrun
+                  precedingPhases: [ add-cdh-repo ]
+                  parameters:
+                    isSudo: true
+                    isSolo: true
+                    roles: ["master", "manager", "datanode"]
+                    runList: ["cloudera::cdh"]
+                    recipeUrl: "{$.cookbooks_url}"
+                    jattrs:
+                      cloudera:
+                        repository_url: "{$.repository_url}"
+                        hadoop:
+                          version: "{$.cloudera_hadoop_version}"
+              - provision-hadoop:
+                  action: chefrun
+                  phase: provision-hadoop
+                  precedingPhases: [ install-cdh-packages ]
+                  parameters:
+                    isSudo: true
+                    isSolo: true
+                    roles: [ "manager" ]
+                    recipeUrl: "{$.cookbooks_url}"
+                    runList: [ "recipe[cloudera::clusters_init]", "recipe[cloudera::hadoop_services_start]" ]
+                    jattrs:
+                      java:
+                        java_home: "/usr/java/jdk6"
+                      cloudera:
+                        services: [ "hdfs" ]
+                        manager:
+                          host: "{$.props.vms.Node_Manager_DNS}"
+                        hadoop:
+                          version: "{$.cloudera_hadoop_version}"
+                        clusters:
+                          default:
+                            services:
+                              zookeeper:
+                                server:
+                                  hosts: [ "{$.props.vms.Node_Master[0]}", "{$.props.vms.Node_Manager[0]}", "{$.props.vms.DataNodes[0]}" ]
+                              hdfs:
+                                namenode:
+                                  hosts: "{$.props.vms.Node_Master}"
+                                  config:
+                                    dfs_name_dir_list: "/srv/dfs/nn"
+                                secondarynamenode:
+                                  hosts: "{$.props.vms.Node_Manager}"
+                                  config:
+                                    fs_checkpoint_dir_list: "/srv/dfs/snn"
+                                datanode:
+                                  hosts: "{$.props.vms.DataNodes}"
+                                  config:
+                                    log_threshold: "WARN"
+                                    dfs_data_dir_list: "/srv/dfs/dn"
+                                    dfs_datanode_data_dir_perm: "755"
+                                    datanode_config_safety_valve: |
+                                                                    <property>
+                                                                        <name>dfs.block.local-path-access.user</name>
+                                                                        <value>hbase</value>
+                                                                    </property>
+                              mapreduce:
+                                jobtracker:
+                                  hosts: "{$.props.vms.Node_Manager}"
+                                tasktracker:
+                                  hosts: "{$.props.vms.DataNodes}"
+                                  config:
+                                    mapred_tasktracker_map_tasks_maximum: 6
+                                    mapred_tasktracker_reduce_tasks_maximum: 4
+                        repository_url: "{$.repository_url}"
+              - init-hadoop-dirs:
+                  action: execrun
+                  precedingPhases: [ provision-hadoop ]
+                  parameters:
+                    isSudo: true
+                    roles: [ "master" ]
+                    command:
+                        - bash
+                        - '-c'
+                        - |
+                          su hdfs -c "hadoop fs -mkdir -p /tmp";
+                          su hdfs -c "hadoop fs -chmod 1777 /tmp";
+                          su hdfs -c "hadoop fs -mkdir /hbase";
+                          su hdfs -c "hadoop fs -chown hbase:hbase /hbase";
+                          su hdfs -c "hadoop fs -mkdir /user";
+                          su hdfs -c "hadoop fs -mkdir /user/mapred";
+                          su hdfs -c "hadoop fs -chown mapred:mapred /user/mapred";
+
+              - start-hadoop:
+                  action: chefrun
+                  precedingPhases: [ init-hadoop-dirs ]
+                  parameters:
+                    isSudo: true
+                    isSolo: true
+                    roles: [ "manager" ]
+                    recipeUrl: "{$.cookbooks_url}"
+                    runList: [ "recipe[cloudera::hadoop_services_start]" ]
+                    jattrs:
+                      java:
+                        java_home: "/usr/java/jdk6"
+                      cloudera:
+                        services: [ "zookeeper", "mapreduce" ]
+                        manager:
+                          host: "{$.props.vms.Node_Manager_DNS}"
+                        repository_url: "{$.repository_url}"
+                        hadoop:
+                          version: "{$.cloudera_hadoop_version}"
+              - install-hbase:
+                  action: chefrun
+                  precedingPhases: [ start-hadoop ]
+                  parameters:
+                    isSudo: true
+                    isSolo: true
+                    roles: [ "manager" ]
+                    recipeUrl: "{$.cookbooks_url}"
+                    runList: [ "recipe[cloudera::hbase]" ]
+                    jattrs:
+                      cloudera:
+                        master:
+                          host: "{$.props.vms.Node_Master_DNS}"
+                        manager:
+                          host: "{$.props.vms.Node_Manager_DNS}"
+                          version: "{$.cloudera_manager_version}"
+                        datanodes:
+                          hosts: "{$.props.vms.DataNodes}"
+                        hadoop:
+                          version: "{$.cloudera_hadoop_version}"
+                        repository_url: "{$.repository_url}"
+            return:
+              - NameNode:
+                  description: "Name Node for HA if available"
+                  value: "{$.props.vms.Node_Master}"
+              - Primary_NameNode:
+                  description: "Primary NameNode"
+                  value: "{$.props.vms.Node_Master}"
+              - Secondary_NameNode:
+                  description: "Secondary NameNode"
+                  value: "{$.props.vms.Node_Manager}"
+              - Hbase_Master:
+                  description: "Hbase node"
+                  value: "{$.props.vms.Node_Manager}"
+              - Hbase_MasterDns:
+                  description: "Hbase Master Dns Name"
+                  value: "{$.props.vms.Node_Manager_DNS}"
+              - JobTracker:
+                  description: "Job Tracker node"
+                  value: "{$.props.vms.Node_Manager}"
+              - cloudera_hdfsWebui:
+                  description: "Namenode (HDFS)"
+                  value: "http://{$.props.vms.Node_Master}:50070"
+              - cloudera_jobtrackerWebui:
+                  description: "Job Tracker (MapReduce)"
+                  value: "http://{$.props.vms.Node_Manager}:50030"
+              - cloudera_hbaseWebui:
+                  description: "Master (HBase)"
+                  value: "http://{$.props.vms.Node_Master}:60010"
