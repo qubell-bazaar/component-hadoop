@@ -1,7 +1,7 @@
 application:
   configuration:
-    input.ami: "us-east-1/ami-ee698586"
-    #input.ami: "us-west-1/ami-0e073d4b"
+    #input.ami: "us-east-1/ami-ee698586"
+    input.ami: "us-west-1/ami-0e073d4b"
     input.identity: "root"
     input.master_hardware: "m3.large"
     input.datanode_hardware: "m3.large"
