@@ -4,7 +4,7 @@ application:
     input.cdh_ami:                            "us-west-1/ami-0e073d4b"
     #input.cdh_ami:                            "us-east-1/ami-ee698586"
     input.cluster_prefix:                     "cdh_default_name"
-    input.cookbooks_url:                      "https://dl.dropboxusercontent.com/u/250836/hadoop.tar.gz"
+    input.cookbooks_url:                      "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-d1ef4c3.tar.gz"
     input.datanodes:                          "5"
     input.master_hardware:                    "m3.large"
     input.datanode_hardware:                  "m3.large"
@@ -275,8 +275,8 @@ application:
                             jattrs:
                                 cloudera:
                                     repository_url: "{$.repository_url}"
-                                hadoop:
-                                    version: "{$.cloudera_hadoop_version}"
+                                    hadoop:
+                                      version: "{$.cloudera_hadoop_version}"
 
                     - provision-hadoop:
                         action: chefrun
@@ -463,13 +463,6 @@ application:
                                     hadoop:
                                         version: "{$.cloudera_hadoop_version}"
                                     repository_url: "{$.repository_url}"
-                    #- wait-hive:
-                    #    action: wait
-                    #    description: "wait hive"
-                    #    phase: wait-hive
-                    #    precedingPhases: [services-hive]
-                    #    parameters:
-                    #      delay: 600
 
                     - install-oozie:
                         action: chefrun
@@ -589,7 +582,7 @@ application:
                             roles: [ "master", "manager", "datanode" ]
                             recipeUrl: "{$.cookbooks_url}"
                             runList: [ "recipe[cloudera::flume_pkg]" ]
-                            
+
                     - install-pig:
                         action: chefrun
                         phase: install-pig
@@ -643,7 +636,7 @@ application:
                                     manager:
                                         host: "{$.managerDns[*][0]}"
                                         version: "{$.cloudera_manager_version}"
-                                    datanode:
+                                    datanodes:
                                         hosts: "{$.datanodeDns[*]}"
                                     hadoop:
                                         version: "{$.cloudera_hadoop_version}"
@@ -666,7 +659,7 @@ application:
                                     manager:
                                         host: "{$.managerDns[*][0]}"
                                         version: "{$.cloudera_manager_version}"
-                                    datanode:
+                                    datanodes:
                                         hosts: "{$.datanodeDns[*]}"
                                     hadoop:
                                         version: "{$.cloudera_hadoop_version}"
