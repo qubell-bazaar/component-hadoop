@@ -76,6 +76,7 @@ application:
                     roles: [ "manager" ]
                     recipeUrl: "{$.cookbooks_url}"
                     runList: [ "recipe[cloudera::oozie]" ]
+                    retryCount: 2
                     jattrs:
                       cloudera:
                         master:
