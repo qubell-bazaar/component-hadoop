@@ -60,6 +60,10 @@ application:
         input:
           ami: configuration(string)
           identity: configuration(string)
+          #  type: configuration(map<string,object>)
+          #  suggestions:
+          #    east: {image: "us-east-1/ami-ee698586", identity: "root"}
+          #    west: {image: "us-west-1/ami-0e073d4b", identity: "root"}
           master_hardware: configuration(string)
           datanode_hardware: configuration(string)
           datanodes_quantity: configuration(string)
