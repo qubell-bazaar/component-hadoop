@@ -209,6 +209,7 @@ application:
                             roles: [ "manager" ]
                             recipeUrl: "{$.cookbooks_url}"
                             runList: [ "recipe[cloudera::manager]" ]
+                            retryCount: 2
                             jattrs:
                                 cloudera:
                                     hadoop:
@@ -227,6 +228,7 @@ application:
                             roles: [ "master", "manager", "datanode" ]
                             recipeUrl: "{$.cookbooks_url}"
                             runList: [ "recipe[cloudera::agent]" ]
+                            retryCount: 2
                             jattrs:
                                 cloudera:
                                     manager:
@@ -272,6 +274,7 @@ application:
                             roles: ["master", "manager", "datanode"]
                             runList: ["cloudera::cdh"]
                             recipeUrl: "{$.cookbooks_url}"
+                            retryCount: 2
                             jattrs:
                                 cloudera:
                                     repository_url: "{$.repository_url}"
@@ -288,6 +291,7 @@ application:
                             roles: [ "manager" ]
                             recipeUrl: "{$.cookbooks_url}"
                             runList: [ "recipe[cloudera::clusters_init]", "recipe[cloudera::hadoop_services_start]" ]
+                            retryCount: 2
                             jattrs:
                                 cloudera:
                                     services: [ "hdfs" ]
@@ -380,6 +384,7 @@ application:
                             roles: [ "manager" ]
                             recipeUrl: "{$.cookbooks_url}"
                             runList: [ "recipe[cloudera::hbase]" ]
+                            retryCount: 2
                             jattrs:
                                 cloudera:
                                     master:
@@ -403,6 +408,7 @@ application:
                             roles: [ "manager" ]
                             recipeUrl: "{$.cookbooks_url}"
                             runList: [ "recipe[cloudera::hive_rc]" ]
+                            retryCount: 2
                             jattrs:
                                 cloudera:
                                     master:
@@ -431,6 +437,7 @@ application:
                             roles: [ "master", "datanode" ]
                             recipeUrl: "{$.cookbooks_url}"
                             runList: [ "recipe[cloudera::hive_client_pkg]" ]
+                            retryCount: 2
                             jattrs:
                                 cloudera:
                                     master:
@@ -451,6 +458,7 @@ application:
                             roles: [ "manager" ]
                             recipeUrl: "{$.cookbooks_url}"
                             runList: [ "recipe[cloudera::hive]" ]
+                            retryCount: 2
                             jattrs:
                                 cloudera:
                                     master:
@@ -474,6 +482,7 @@ application:
                             roles: [ "manager" ]
                             recipeUrl: "{$.cookbooks_url}"
                             runList: [ "recipe[cloudera::oozie]" ]
+                            retryCount: 2
                             jattrs:
                                 cloudera:
                                     master:
@@ -499,6 +508,7 @@ application:
                             roles: [ "manager" ]
                             recipeUrl: "{$.cookbooks_url}"
                             runList: [ "recipe[cloudera::start_oozie]" ]
+                            retryCount: 2
                             jattrs:
                                 cloudera:
                                     manager:
@@ -518,6 +528,7 @@ application:
                             roles: [ "master", "manager", "datanode" ]
                             recipeUrl: "{$.cookbooks_url}"
                             runList: [ "recipe[cloudera::impala_pkg]" ]
+                            retryCount: 2
                             jattrs:
                                 cloudera:
                                     impala:
@@ -538,6 +549,7 @@ application:
                             roles: [ "master" ]
                             recipeUrl: "{$.cookbooks_url}"
                             runList: [ "recipe[cloudera::impala_start]" ]
+                            retryCount: 2
                             jattrs:
                                 cloudera:
                                     master:
@@ -561,6 +573,7 @@ application:
                             roles: [ "master" ]
                             recipeUrl: "{$.cookbooks_url}"
                             runList: [ "recipe[cloudera::sqoop]" ]
+                            retryCount: 2
                             jattrs:
                                 cloudera:
                                     master:
@@ -582,6 +595,12 @@ application:
                             roles: [ "master", "manager", "datanode" ]
                             recipeUrl: "{$.cookbooks_url}"
                             runList: [ "recipe[cloudera::flume_pkg]" ]
+                            retryCount: 2
+                            jattrs:
+                              cloudera:
+                                hadoop:
+                                  version: "{$.cloudera_hadoop_version}"
+                                repository_url: "{$.repository_url}"
 
                     - install-pig:
                         action: chefrun
@@ -593,6 +612,7 @@ application:
                             roles: [ "manager" ]
                             recipeUrl: "{$.cookbooks_url}"
                             runList: [ "recipe[cloudera::pig]" ]
+                            retryCount: 2
                             jattrs:
                                 cloudera:
                                     hadoop:
@@ -609,6 +629,7 @@ application:
                             roles: [ "master", "manager", "datanode" ]
                             recipeUrl: "{$.cookbooks_url}"
                             runList: [ "recipe[cloudera::solr_pkg]" ]
+                            retryCount: 2
                             jattrs:
                                 cloudera:
                                     search:
@@ -629,6 +650,7 @@ application:
                             roles: [ "master" ]
                             recipeUrl: "{$.cookbooks_url}"
                             runList: [ "recipe[cloudera::solr_start]" ]
+                            retryCount: 2
                             jattrs:
                                 cloudera:
                                     master:
@@ -652,6 +674,7 @@ application:
                             roles: [ "master" ]
                             recipeUrl: "{$.cookbooks_url}"
                             runList: [ "recipe[cloudera::search]" ]
+                            retryCount: 2
                             jattrs:
                                 cloudera:
                                     master:
@@ -675,6 +698,7 @@ application:
                             roles: [ "manager" ]
                             recipeUrl: "{$.cookbooks_url}"
                             runList: [ "recipe[cloudera::hue]" ]
+                            retryCount: 2
                             jattrs:
                                 cloudera:
                                     manager:
@@ -694,6 +718,7 @@ application:
                             roles: [ "manager" ]
                             recipeUrl: "{$.cookbooks_url}"
                             runList: [ "recipe[cloudera::restart_hue]" ]
+                            retryCount: 2
                             jattrs:
                                 cloudera:
                                     manager:
