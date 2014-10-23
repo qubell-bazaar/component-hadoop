@@ -1,3 +1,3 @@
 site :opscode
 
-cookbook "cloudera", git: "https://github.com/qubell-bazaar/cookbook-hadoop.git", ref: "1.0.1"
+cookbook "cloudera", git: "https://github.com/qubell-bazaar/cookbook-hadoop.git", ref: "2.0.0"
