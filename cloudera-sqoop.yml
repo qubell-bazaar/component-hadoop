@@ -73,6 +73,7 @@ application:
                     roles: [ "master" ]
                     recipeUrl: "{$.cookbooks_url}"
                     runList: [ "recipe[cloudera::sqoop]" ]
+                    retryCount: 2
                     jattrs:
                       java:
                         java_home: "/usr/java/jdk6"

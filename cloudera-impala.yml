@@ -96,6 +96,7 @@ application:
                     roles: [ "master", "manager", "datanode" ]
                     recipeUrl: "{$.cookbooks_url}"
                     runList: [ "recipe[cloudera::impala_pkg]" ]
+                    retryCount: 2
                     jattrs:
                       cloudera:
                         impala:

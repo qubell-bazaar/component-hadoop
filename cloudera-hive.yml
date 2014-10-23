@@ -114,6 +114,7 @@ application:
                     roles: [ "manager" ]
                     recipeUrl: "{$.cookbooks_url}"
                     runList: [ "recipe[cloudera::hive_rc]" ]
+                    retryCount: 2
                     jattrs:
                       java:
                         java_home: "/usr/java/jdk6"
@@ -143,6 +144,7 @@ application:
                       roles: [ "master", "datanode" ]
                       recipeUrl: "{$.cookbooks_url}"
                       runList: [ "recipe[cloudera::hive_client_pkg]" ]
+                      retryCount: 2
                       jattrs:
                         java:
                           java_home: "/usr/java/jdk6"
