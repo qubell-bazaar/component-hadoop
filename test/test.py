@@ -18,10 +18,11 @@ from qubell.api.private.testing import instance, environment, workflow, values
     #}
 })
 class ClouderaHadoopComponentTestCase(BaseComponentTestCase):
-    name = "component-hadoop"
+    name = "CDH Main"
+    meta = "https://raw.githubusercontent.com/qubell-bazaar/component-hadoop/components/meta.yml"
     apps = [{
         "name": name,
-        "file": os.path.realpath(os.path.join(os.path.dirname(__file__), '../%s.yml' % name))
+        "file": os.path.realpath(os.path.join(os.path.dirname(__file__), '../component-hadoop.yml'))
     }]
     @classmethod
     def timeout(cls):
