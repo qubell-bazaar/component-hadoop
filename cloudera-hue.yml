@@ -73,6 +73,7 @@ application:
                     roles: [ "manager" ]
                     recipeUrl: "{$.cookbooks_url}"
                     runList: [ "recipe[cloudera::hue]" ]
+                    retryCount: 2
                     jattrs:
                       java:
                         java_home: "/usr/java/jdk6"

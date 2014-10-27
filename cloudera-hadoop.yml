@@ -113,6 +113,7 @@ application:
                     roles: [ "master", "manager", "datanode" ]
                     runList: ["cloudera::cdh_repo"]
                     recipeUrl: "{$.cookbooks_url}"
+                    retryCount: 2
                     jattrs:
                       cloudera:
                         repository_url: "{$.repository_url}"
@@ -127,6 +128,7 @@ application:
                     roles: ["master", "manager", "datanode"]
                     runList: ["cloudera::cdh"]
                     recipeUrl: "{$.cookbooks_url}"
+                    retryCount: 2
                     jattrs:
                       cloudera:
                         repository_url: "{$.repository_url}"
@@ -232,6 +234,7 @@ application:
                     roles: [ "manager" ]
                     recipeUrl: "{$.cookbooks_url}"
                     runList: [ "recipe[cloudera::hbase]" ]
+                    retryCount: 2
                     jattrs:
                       cloudera:
                         master:

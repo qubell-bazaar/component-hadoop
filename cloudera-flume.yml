@@ -91,6 +91,7 @@ application:
                     roles: [ "master", "manager", "datanode" ]
                     recipeUrl: "{$.cookbooks_url}"
                     runList: [ "recipe[cloudera::flume_pkg]" ]
+                    retryCount: 2
                     jattrs:
                       java:
                         java_home: "/usr/java/jdk6"
