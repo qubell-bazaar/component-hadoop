@@ -26,9 +26,9 @@ class ClouderaHadoopComponentTestCase(BaseComponentTestCase):
     }]
     @classmethod
     def timeout(cls):
-        return 60
+        return 90
     @instance(byApplication=name)
-    @values({"Cloudera.Manager_URL": "url"})
+    @values({"Cloudera.manager": "url"})
     def test_check_user_login(self, instance, url):
       import socket
       import requests 
