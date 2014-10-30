@@ -46,7 +46,9 @@ application:
         cloudera-oozie:
           Oozie_Server: consume-signal(list<string>)
         result:
-          Impala_Master: publish-signal(list<string>)
+          Impala_Master:
+            type: publish-signal(list<string>)
+            name: Impala master server
       required: [vms, cloudera-oozie]
       configuration:
         configuration.triggers: {}

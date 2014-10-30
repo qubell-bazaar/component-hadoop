@@ -63,8 +63,12 @@ application:
           cloudera_jobtrackerWebui: consume-signal(list<string>)
           cloudera_hbaseWebui: consume-signal(list<string>)
         result:
-          Hive_Server: publish-signal(list<string>)
-          Hive_Metastore: publish-signal(list<string>)
+          Hive_Server:
+            type: publish-signal(list<string>)
+            name: Hive server
+          Hive_Metastore:
+            type: publish-signal(list<string>)
+            name: Hive Metastore server
       required: [vms, cloudera-hadoop]
       configuration:
         configuration.triggers: {}

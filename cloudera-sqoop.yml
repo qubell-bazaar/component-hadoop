@@ -43,7 +43,9 @@ application:
         cloudera-impala:
           Impala_Master: consume-signal(list<string>)
         result:
-          Sqoop_Master: publish-signal(list<string>)
+          Sqoop_Master:
+            type: publish-signal(list<string>)
+            name: Sqoop server
       required: [vms, cloudera-impala]
       configuration:
         configuration.triggers: {}

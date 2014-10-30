@@ -45,7 +45,9 @@ application:
           Hive_Server: consume-signal(list<string>)
           Hive_Metastore: consume-signal(list<string>)
         result:
-          Oozie_Server: publish-signal(list<string>)
+          Oozie_Server:
+            type: publish-signal(list<string>)
+            name: Oozie server
       required: [vms, cloudera-hive]
       configuration:
         configuration.triggers: {}

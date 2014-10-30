@@ -40,7 +40,9 @@ application:
         cloudera-sqoop:
           Sqoop_Master: consume-signal(list<string>)
         result:
-          Flume_Status: publish-signal(string)
+          Flume_Status:
+            type: publish-signal(string)
+            name: Flume status
       required: [vms, cloudera-sqoop]
       configuration:
         configuration.triggers: {}
