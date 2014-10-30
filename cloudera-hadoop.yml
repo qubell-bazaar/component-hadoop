@@ -55,15 +55,33 @@ application:
           cloudera_Login: consume-signal(string)
           cloudera_Password: consume-signal(string)
         result:
-          NameNode: publish-signal(list<string>)
-          Primary_NameNode: publish-signal(list<string>)
-          Secondary_NameNode: publish-signal(list<string>)
-          Hbase_Master: publish-signal(list<string>)
-          Hbase_MasterDns: publish-signal(string)
-          JobTracker: publish-signal(list<string>)
-          cloudera_hdfsWebui: publish-signal(list<string>)
-          cloudera_jobtrackerWebui: publish-signal(list<string>)
-          cloudera_hbaseWebui: publish-signal(list<string>)
+          NameNode:
+            type: publish-signal(list<string>)
+            name: Default Namenode
+          Primary_NameNode:
+            type: publish-signal(list<string>)
+            name: Primary Namenode
+          Secondary_NameNode:
+            type: publish-signal(list<string>)
+            name: Secondary Namenode
+          Hbase_Master:
+            type: publish-signal(list<string>)
+            name: HBase master server
+          Hbase_MasterDns:
+            type: publish-signal(string)
+            name: HBase master server DNS
+          JobTracker:
+            type: publish-signal(list<string>)
+            name: Jobtracker
+          cloudera_hdfsWebui:
+            type: publish-signal(list<string>)
+            name: HDFS UI
+          cloudera_jobtrackerWebui:
+            type: publish-signal(list<string>)
+            name: Jobtracker UI
+          cloudera_hbaseWebui:
+            type: publish-signal(list<string>)
+            name: HBase UI
       required: [vms, cloudera-manager]
       configuration:
         configuration.triggers: {}

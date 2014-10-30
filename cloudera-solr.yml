@@ -46,7 +46,9 @@ application:
         cloudera-pig:
           Pig_Status: consume-signal(string)
         result:
-          Solr_Uri: publish-signal(list<string>)
+          Solr_Uri:
+            type: publish-signal(list<string>)
+            name: Solr URI
       required: [vms, cloudera-pig]
       configuration:
         configuration.triggers: {}

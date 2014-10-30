@@ -40,7 +40,9 @@ application:
         cloudera-flume:
           Flume_Status: consume-signal(string)
         result:
-          Pig_Status: publish-signal(string)
+          Pig_Status:
+            type: publish-signal(string)
+            name: Pig status
       required: [vms, cloudera-flume]
       configuration:
         configuration.triggers: {}

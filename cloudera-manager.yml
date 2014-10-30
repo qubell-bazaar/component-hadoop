@@ -38,9 +38,15 @@ application:
           DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
         result:
-          cloudera_Manager: publish-signal(list<string>)
-          cloudera_Login: publish-signal(string)
-          cloudera_Password: publish-signal(string)
+          cloudera_Manager:
+            type: publish-signal(list<string>)
+            name: Manager URL
+          cloudera_Login:
+            type: publish-signal(string)
+            name: Login
+          cloudera_Password:
+            type: publish-signal(string)
+            name: Password
       required: [vms]
       configuration:
         configuration.triggers: {}

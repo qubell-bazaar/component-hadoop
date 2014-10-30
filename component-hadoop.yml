@@ -30,9 +30,12 @@ application:
       cloudera_impala_version: "bind(cloudera-impala#input.cloudera_impala_version)"
       cloudera_search_version: "bind(cloudera-solr#input.cloudera_search_version)"
     Cloudera:
-      Manager_URL: "bind(cloudera-manager#cloudera-manager.Manager_URL)"
-      Login: "bind(cloudera-manager#cloudera-manager.Login)"
-      Password: "bind(cloudera-manager#cloudera-manager.Password)"
+      application-pic: "bind(metadata#output.application-pic)"
+      manager: "bind(cloudera-manager#cloudera-manager.Manager_URL)"
+      login: "bind(cloudera-manager#cloudera-manager.Login)"
+      password: "bind(cloudera-manager#cloudera-manager.Password)"
+      datanodes: "bind(vms#result.DataNodes)"
+      cpu-timeseries: "bind(monitoring#result.cpu-timeseries)"
   bindings:
     - [vms, cloudera-manager]
     - [vms, cloudera-hadoop]
@@ -53,7 +56,67 @@ application:
     - [cloudera-pig, cloudera-flume]
     - [cloudera-solr, cloudera-pig]
     - [cloudera-hue, cloudera-solr]
+    - [monitoring, vms]
+    - [monitoring, cloudera-manager]
+    - [monitoring, cloudera-hue]
   components:
+    metadata:
+      type: cobalt.common.Constants
+      interfaces:
+        output:
+          application-pic: publish-signal(map<string, string>)
+      configuration:
+        configuration.values:
+          output.application-pic: { "large": "https://s3.amazonaws.com/qubell-images/hadoop.png", "small": "https://s3.amazonaws.com/qubell-images/hadoop_med.png" }
+    monitoring:
+      type: workflow.Instance
+      required: [ vms, cloudera-hue, cloudera-manager ]
+      interfaces:
+        cloudera-hue:
+          hue_url: consume-signal(list<string>)
+        vms:
+          Node_Manager: consume-signal(list<string>)
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master: consume-signal(list<string>)
+          Node_Master_DNS: consume-signal(string)
+          DataNodes: consume-signal(list<string>)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-manager:
+          Manager_URL: consume-signal(list<string>)
+          Login: consume-signal(string)
+          Password: consume-signal(string)
+        result:
+          cpu-timeseries: publish-signal(map<string, list<object>>)
+      configuration:
+        configuration.triggers: {}
+        configuration.schedule:
+          update: "0 0/5 * * * ? *"
+        configuration.workflows:
+          launch: &launch
+            steps:
+              - getSignals:
+                  action: getSignals
+                  output:
+                    env: result
+              - getCpu:
+                  action: restcall
+                  precedingPhases: [ getSignals ]
+                  parameters:
+                    command: "http://{$.env.vms.Node_Manager[0]}:7180/api/v4/timeseries?query=select+cpu_percent_across_hosts+where+category+%3D+CLUSTER"
+                    method: GET
+                    auth:
+                      type: basic
+                      user: "{$.env.cloudera-manager.Login}"
+                      password: "{$.env.cloudera-manager.Password}"
+                    contentType: application/json
+                  output:
+                    cpu: content
+            return:
+              cpu-timeseries:
+                description: "CPU graph"
+                value: "{$.cpu}"
+          update: *launch
+
     vms:
       type: workflow.Instance
       interfaces:
@@ -74,7 +137,9 @@ application:
           Node_Manager_DNS: publish-signal(string)
           Node_Master: publish-signal(list<string>)
           Node_Master_DNS: publish-signal(string)
-          DataNodes: publish-signal(list<string>)
+          DataNodes:
+            type: publish-signal(list<string>)
+            name: Data nodes
           DataNodesDNS: publish-signal(list<string>)
       required: []
       configuration:
@@ -295,9 +360,15 @@ application:
           DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
         cloudera-manager:
-          Manager_URL: publish-signal(list<string>)
-          Login: publish-signal(string)
-          Password: publish-signal(string)
+          Manager_URL:
+            type: publish-signal(list<string>)
+            name: Manager URL
+          Login:
+            type: publish-signal(string)
+            name: Login
+          Password:
+            type: publish-signal(string)
+            name: Password
     cloudera-hadoop:
       type: reference.Submodule
       configuration:

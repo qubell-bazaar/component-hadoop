@@ -43,7 +43,9 @@ application:
         cloudera-solr:
           Solr_Uri: consume-signal(list<string>)
         result:
-          hue_url: publish-signal(list<string>)
+          hue_url:
+            type: publish-signal(list<string>)
+            name: Hue URL
       required: [vms, cloudera-solr]
       configuration:
         configuration.triggers: {}
