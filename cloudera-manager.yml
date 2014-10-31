@@ -21,15 +21,37 @@ application:
       Manager_URL: "bind(cloudera-manager#result.cloudera_Manager)"
       Login: "bind(cloudera-manager#result.cloudera_Login)"
       Password: "bind(cloudera-manager#result.cloudera_Password)"
+      application-pic: "bind(metadata#output.application-pic)"
   components:
+    metadata:
+      type: cobalt.common.Constants
+      interfaces:
+        output:
+          application-pic:
+            type: publish-signal(map<string, object>)
+            name: ""
+      configuration:
+        configuration.values:
+          output.application-pic:
+            large: "https://s3.amazonaws.com/qubell-images/manager.png"
+            small: "https://s3.amazonaws.com/qubell-images/manager.png"
+            small-height: 64
     cloudera-manager:
       type: workflow.Instance
       interfaces:
         input:
-          identity: configuration(string)
-          repository_url: configuration(string)
-          cookbooks_url: configuration(string)
-          cloudera_manager_version: configuration(string)
+          identity:
+            type: configuration(string)
+            name: EC2 image username
+          repository_url:
+            type: configuration(string)
+            name: Cloudera RPM repository
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+          cloudera_manager_version:
+            type: configuration(string)
+            name: Cloudera Manager version
         vms:
           Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
@@ -39,7 +61,7 @@ application:
           DataNodesDNS: consume-signal(list<string>)
         result:
           cloudera_Manager:
-            type: publish-signal(list<string>)
+            type: publish-signal(string)
             name: Manager URL
           cloudera_Login:
             type: publish-signal(string)
@@ -155,7 +177,7 @@ application:
             return:
               - cloudera_Manager:
                   description: "Cloudera Manager URL"
-                  value: "http://{$.managerIp}:7180"
+                  value: "http://{$.managerIp[0]}:7180"
               - cloudera_Login:
                   description: "Login for Cloudera Manager"
                   value: "admin"

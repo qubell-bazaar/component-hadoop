@@ -21,7 +21,21 @@ application:
       Sqoop_Master: "bind(cloudera-flume#cloudera-sqoop.Sqoop_Master)"
     cloudera-flume:
       Flume_Status: "bind(cloudera-flume#result.Flume_Status)"
+      application-pic: "bind(metadata#output.application-pic)"
   components:
+    metadata:
+      type: cobalt.common.Constants
+      interfaces:
+        output:
+          application-pic:
+            type: publish-signal(map<string, object>)
+            name: ""
+      configuration:
+        configuration.values:
+          output.application-pic:
+            large: "https://s3.amazonaws.com/qubell-images/flume-logo.png"
+            small: "https://s3.amazonaws.com/qubell-images/flume-logo.png"
+            small-height: 170
     cloudera-flume:
       type: workflow.Instance
       interfaces:
