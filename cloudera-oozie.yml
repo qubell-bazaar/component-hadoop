@@ -24,7 +24,9 @@ application:
       Hive_Metastore: "bind(cloudera-oozie#cloudera-hive.Hive_Metastore)"
     cloudera-oozie:
       Oozie_Server: "bind(cloudera-oozie#result.Oozie_Server)"
+      Oozie_Web: "bind(cloudera-oozie#result.Oozie_Web)"
       application-pic: "bind(metadata#output.application-pic)"
+      run-workflow: "bind(cloudera-oozie#actions.run-workflow)"
   components:
     metadata:
       type: cobalt.common.Constants
@@ -48,6 +50,10 @@ application:
           cookbooks_url: configuration(string)
           cloudera_hadoop_version: configuration(string)
           cloudera_manager_version: configuration(string)
+        actions:
+          run-workflow:
+            type: receive-command(string archive-url, string data-dir => string status)
+            name: Run workflow
         vms:
           Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
@@ -62,6 +68,9 @@ application:
           Oozie_Server:
             type: publish-signal(list<string>)
             name: Oozie server
+          Oozie_Web:
+            type: publish-signal(string)
+            name: Oozie web UI
       required: [vms, cloudera-hive]
       configuration:
         configuration.triggers: {}
@@ -129,3 +138,61 @@ application:
               - Oozie_Server:
                   description:                "Oozie server node"
                   value:                      "{$.props.vms.Node_Manager}"
+              - Oozie_Web:
+                  description: "Oozie web UI"
+                  value: "http://{$.props.vms.Node_Manager_DNS}:11000/oozie"
+
+          run-workflow:
+            steps:
+              - get-env-props:
+                  action: getEnvironmentProperties
+                  output:
+                    props: result
+              - upload-workflow:
+                  action: execrun
+                  precedingPhases: [ get-env-props ]
+                  parameters:
+                    isSudo: true
+                    roles: [ "manager" ]
+                    command:
+                        - |
+                           TDIR=`mktemp -d`
+                           cd $$TDIR
+                           curl -kL "{$.archive-url}" | tar -xzf - &>/dev/null
+                           hadoop fs -put ./ "{$.data-dir}/flow"
+                           echo "nameNode=hdfs://{$.props.vms.Node_Master_DNS}:8020" >> job.properties
+                           echo "jobTracker={$.props.vms.Node_Manager_DNS}:8021" >> job.properties
+                           echo "inputDir={$.data-dir}/input" >> job.properties
+                           echo "outputDir={$.data-dir}/output" >> job.properties
+                           echo "oozie.wf.application.path=hdfs://{$.props.vms.Node_Master_DNS}:8020{$.data-dir}/flow" >> job.properties
+                           echo -n $$TDIR
+                  output:
+                    workflow-path: stdout
+              - run-workflow:
+                  action: execrun
+                  precedingPhases: [ upload-workflow ]
+                  parameters:
+                    isSudo: true
+                    roles: [ "manager" ]
+                    command:
+                        - |
+                           JOB=`oozie job -oozie http://localhost:11000/oozie -config "{$.workflow-path['*'][0]}/job.properties" -run | cut -d' ' -f2`
+                           RUNNING=1
+                           while [ $$RUNNING -eq 1 ]; do
+                             RUNNING=`oozie job -oozie http://localhost:11000/oozie -info $$JOB | grep Ended | grep -c ': -'`
+                           done
+                           oozie job -oozie http://localhost:11000/oozie -info $$JOB | grep Status | head -n1 | xargs echo | cut -d' ' -f3
+                  output:
+                    status: stdout
+              - cleanup-workflow:
+                  action: execrun
+                  precedingPhases: [ run-workflow ]
+                  parameters:
+                    isSudo: true
+                    roles: [ "manager" ]
+                    command:
+                        - rm -rf {$.workflow-path['*'][0]}
+            return:
+              - status:
+                  description: Oozie job status
+                  value: "{$.status['*'][0]}"
