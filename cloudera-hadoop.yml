@@ -34,6 +34,8 @@ application:
       cloudera_jobtrackerWebui: "bind(cloudera-hadoop#result.cloudera_jobtrackerWebui)"
       cloudera_hbaseWebui: "bind(cloudera-hadoop#result.cloudera_hbaseWebui)"
       application-pic: "bind(metadata#output.application-pic)"
+      upload-data: "bind(cloudera-hadoop#actions.upload-data)"
+      cleanup-data: "bind(cloudera-hadoop#actions.cleanup-data)"
   components:
     metadata:
       type: cobalt.common.Constants
@@ -67,6 +69,13 @@ application:
           cloudera_manager_version:
             type: configuration(string)
             name: Cloudera Manager version
+        actions:
+          upload-data:
+            type: receive-command(string archive-url => string data-dir, string data-url)
+            name: Upload data
+          cleanup-data:
+            type: receive-command(string data-dir)
+            name: Cleanup data
         vms:
           Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
@@ -317,3 +326,50 @@ application:
               - cloudera_hbaseWebui:
                   description: "Master (HBase)"
                   value: "http://{$.props.vms.Node_Master}:60010"
+          upload-data:
+            steps:
+              - get-env-props:
+                  action: getEnvironmentProperties
+                  output:
+                    props: result
+              - upload-data:
+                  action: execrun
+                  precedingPhases: [ get-env-props ]
+                  parameters:
+                    isSudo: true
+                    roles: [ "master" ]
+                    command:
+                        - |
+                           TDIR=`openssl rand -hex 10`
+                           hadoop fs -rm -f -r "/tmp/$$TDIR" &>/dev/null
+                           hadoop fs -mkdir -p "/tmp/$$TDIR" &>/dev/null
+                           mkdir -p /tmp/$$TDIR/input &>/dev/null
+                           curl -kL "{$.archive-url}" | tar -C "/tmp/$$TDIR/input" -xzf - &>/dev/null
+                           hadoop fs -put "/tmp/$$TDIR/input" "/tmp/$$TDIR/input" &>/dev/null
+                           rm -rf "/tmp/$$TDIR" &>/dev/null
+                           echo -n "/tmp/$$TDIR"
+                  output:
+                    hdfs-path: stdout
+
+            return:
+              - data-dir:
+                  description: HDFS path for uploaded data
+                  value: "{$.hdfs-path['*'][0]}"
+              - data-url:
+                  description: View online
+                  value: "http://{$.props.vms.Node_Master_DNS}:50070/explorer.html#{$.hdfs-path['*'][0]}"
+
+          cleanup-data:
+            steps:
+              - get-env-props:
+                  action: getEnvironmentProperties
+                  output:
+                    props: result
+              - cleanup-data:
+                  action: execrun
+                  precedingPhases: [ get-env-props ]
+                  parameters:
+                    isSudo: true
+                    roles: [ "master" ]
+                    command:
+                        - hadoop fs -rm -f -r "{$.data-dir}" &>/dev/null

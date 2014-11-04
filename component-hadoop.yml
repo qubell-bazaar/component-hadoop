@@ -36,6 +36,9 @@ application:
       password: "bind(cloudera-manager#cloudera-manager.Password)"
       datanodes: "bind(vms#result.DataNodes)"
       cpu-timeseries: "bind(monitoring#result.cpu-timeseries)"
+      upload-data: "bind(cloudera-hadoop#cloudera-hadoop.upload-data)"
+      cleanup-data: "bind(cloudera-hadoop#cloudera-hadoop.cleanup-data)"
+      run-workflow: "bind(cloudera-oozie#cloudera-oozie.run-workflow)"
   bindings:
     - [vms, cloudera-manager]
     - [vms, cloudera-hadoop]
@@ -463,6 +466,12 @@ application:
           cloudera_hbaseWebui:
             type: publish-signal(list<string>)
             name: HBase web UI
+          upload-data:
+            type: receive-command(string archive-url => string data-dir, string data-url)
+            name: Upload data
+          cleanup-data:
+            type: receive-command(string data-dir)
+            name: Cleanup data
     cloudera-hive:
       type: reference.Submodule
       configuration:
@@ -548,6 +557,9 @@ application:
           Oozie_Server:
             type: publish-signal(list<string>)
             name: Oozie server
+          run-workflow:
+            type: receive-command(string archive-url, string data-dir => string status)
+            name: Run workflow
     cloudera-impala:
       type: reference.Submodule
       configuration:
