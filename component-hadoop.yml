@@ -30,9 +30,12 @@ application:
       cloudera_impala_version: "bind(cloudera-impala#input.cloudera_impala_version)"
       cloudera_search_version: "bind(cloudera-solr#input.cloudera_search_version)"
     Cloudera:
-      Manager_URL: "bind(cloudera-manager#cloudera-manager.Manager_URL)"
-      Login: "bind(cloudera-manager#cloudera-manager.Login)"
-      Password: "bind(cloudera-manager#cloudera-manager.Password)"
+      application-pic: "bind(metadata#output.application-pic)"
+      manager: "bind(cloudera-manager#cloudera-manager.Manager_URL)"
+      login: "bind(cloudera-manager#cloudera-manager.Login)"
+      password: "bind(cloudera-manager#cloudera-manager.Password)"
+      datanodes: "bind(vms#result.DataNodes)"
+      cpu-timeseries: "bind(monitoring#result.cpu-timeseries)"
   bindings:
     - [vms, cloudera-manager]
     - [vms, cloudera-hadoop]
@@ -53,29 +56,122 @@ application:
     - [cloudera-pig, cloudera-flume]
     - [cloudera-solr, cloudera-pig]
     - [cloudera-hue, cloudera-solr]
+    - [monitoring, vms]
+    - [monitoring, cloudera-manager]
+    - [monitoring, cloudera-hue]
   components:
+    metadata:
+      type: cobalt.common.Constants
+      interfaces:
+        output:
+          application-pic:
+            type: publish-signal(map<string, object>)
+            name: ""
+      configuration:
+        configuration.values:
+          output.application-pic:
+            large: "https://s3.amazonaws.com/qubell-images/hadoop.png"
+            small: "https://s3.amazonaws.com/qubell-images/hadoop_med.png"
+            small-height: 64
+    monitoring:
+      type: workflow.Instance
+      required: [ vms, cloudera-hue, cloudera-manager ]
+      interfaces:
+        cloudera-hue:
+          hue_url: consume-signal(list<string>)
+        vms:
+          Node_Manager: consume-signal(list<string>)
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master: consume-signal(list<string>)
+          Node_Master_DNS: consume-signal(string)
+          DataNodes: consume-signal(list<string>)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-manager:
+          Manager_URL: consume-signal(string)
+          Login: consume-signal(string)
+          Password: consume-signal(string)
+        result:
+          cpu-timeseries:
+            type: publish-signal(map<string, list<object>>)
+            name: CPU usage
+      configuration:
+        configuration.triggers: {}
+        configuration.schedule:
+          update: "0 0/5 * * * ? *"
+        configuration.workflows:
+          launch: &launch
+            steps:
+              - getSignals:
+                  action: getSignals
+                  output:
+                    env: result
+              - getCpu:
+                  action: restcall
+                  precedingPhases: [ getSignals ]
+                  parameters:
+                    command: "http://{$.env.vms.Node_Manager[0]}:7180/api/v4/timeseries?query=select+cpu_percent_across_hosts+where+category+%3D+CLUSTER"
+                    method: GET
+                    auth:
+                      type: basic
+                      user: "{$.env.cloudera-manager.Login}"
+                      password: "{$.env.cloudera-manager.Password}"
+                    contentType: application/json
+                  output:
+                    cpu: content
+            return:
+              cpu-timeseries:
+                description: "CPU graph"
+                value: "{$.cpu}"
+          update: *launch
+
     vms:
       type: workflow.Instance
       interfaces:
         input:
-          ami: configuration(string)
-          identity: configuration(string)
+          ami:
+            type: configuration(string)
+            name: EC2 image
+          identity:
+            type: configuration(string)
+            name: EC2 image username
           #  type: configuration(map<string,object>)
           #  suggestions:
           #    east: {image: "us-east-1/ami-ee698586", identity: "root"}
           #    west: {image: "us-west-1/ami-0e073d4b", identity: "root"}
-          master_hardware: configuration(string)
-          datanode_hardware: configuration(string)
-          datanodes_quantity: configuration(string)
-          cluster_prefix: configuration(string)
-          cookbooks_url: configuration(string)
+          master_hardware:
+            type: configuration(string)
+            name: Master node hardware type
+          datanode_hardware:
+            type: configuration(string)
+            name: Data nodes hardware type
+          datanodes_quantity:
+            type: configuration(string)
+            name: No. of data nodes
+          cluster_prefix:
+            type: configuration(string)
+            name: EC2 node name prefix
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
         result:
-          Node_Manager: publish-signal(list<string>)
-          Node_Manager_DNS: publish-signal(string)
-          Node_Master: publish-signal(list<string>)
-          Node_Master_DNS: publish-signal(string)
-          DataNodes: publish-signal(list<string>)
-          DataNodesDNS: publish-signal(list<string>)
+          Node_Manager:
+            type: publish-signal(list<string>)
+            name: Manager node
+          Node_Manager_DNS:
+            type: publish-signal(string)
+            name: Manager node DNS
+          Node_Master:
+            type: publish-signal(list<string>)
+            name: Master node
+          Node_Master_DNS:
+            type: publish-signal(string)
+            name: Master node DNS
+          DataNodes:
+            type: publish-signal(list<string>)
+            name: Data nodes
+          DataNodesDNS:
+            type: publish-signal(list<string>)
+            name: Data nodes DNS
       required: []
       configuration:
         configuration.triggers: {}
@@ -135,22 +231,16 @@ application:
                               hosts_aws: [ "{$.masterDns[*]}", "{$.managerDns[*]}", "{$.datanodeDns[*]}" ]
             return:
               - Node_Manager:
-                  description: "Manager node IP"
                   value: "{$.managerIp}"
               - Node_Manager_DNS:
-                  description: "Manager node DNS"
                   value: "{$.managerDns[*][0]}"
               - Node_Master:
-                  description: "Master node IP"
                   value: "{$.masterIp}"
               - Node_Master_DNS:
-                  description: "Master node DNS"
                   value: "{$.masterDns[*][0]}"
               - DataNodes:
-                  description: "Data nodes IP"
                   value: "{$.datanodeIps}"
               - DataNodesDNS:
-                  description: "Data nodes DNS"
                   value: "{$.datanodeDns[*]}"
 
           .provision-node:
@@ -283,10 +373,18 @@ application:
       required: [vms]
       interfaces:
         input:
-          identity: configuration(string)
-          cookbooks_url: configuration(string)
-          repository_url: configuration(string)
-          cloudera_manager_version: configuration(string)
+          identity:
+            type: configuration(string)
+            name: EC2 image username
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+          repository_url:
+            type: configuration(string)
+            name: Cloudera RPM repository
+          cloudera_manager_version:
+            type: configuration(string)
+            name: Cloudera Manager version
         vms:
           Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
@@ -295,9 +393,15 @@ application:
           DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
         cloudera-manager:
-          Manager_URL: publish-signal(list<string>)
-          Login: publish-signal(string)
-          Password: publish-signal(string)
+          Manager_URL:
+            type: publish-signal(string)
+            name: Manager URL
+          Login:
+            type: publish-signal(string)
+            name: Login
+          Password:
+            type: publish-signal(string)
+            name: Password
     cloudera-hadoop:
       type: reference.Submodule
       configuration:
@@ -305,11 +409,21 @@ application:
       required: [vms, cloudera-manager]
       interfaces:
         input:
-          identity: configuration(string)
-          repository_url: configuration(string)
-          cookbooks_url: configuration(string)
-          cloudera_hadoop_version: configuration(string)
-          cloudera_manager_version: configuration(string)
+          identity:
+            type: configuration(string)
+            name: EC2 image username
+          repository_url:
+            type: configuration(string)
+            name: Cloudera RPM repository
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+          cloudera_hadoop_version:
+            type: configuration(string)
+            name: Cloudera Hadoop version
+          cloudera_manager_version:
+            type: configuration(string)
+            name: Cloudera Manager version
         vms:
           Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
@@ -318,19 +432,37 @@ application:
           DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
         cloudera-manager:
-          Manager_URL: consume-signal(list<string>)
+          Manager_URL: consume-signal(string)
           Login: consume-signal(string)
           Password: consume-signal(string)
         cloudera-hadoop:
-          NameNode: publish-signal(list<string>)
-          Primary_NameNode: publish-signal(list<string>)
-          Secondary_NameNode: publish-signal(list<string>)
-          Hbase_Master: publish-signal(list<string>)
-          Hbase_MasterDns: publish-signal(string)
-          JobTracker: publish-signal(list<string>)
-          cloudera_hdfsWebui: publish-signal(list<string>)
-          cloudera_jobtrackerWebui: publish-signal(list<string>)
-          cloudera_hbaseWebui: publish-signal(list<string>)
+          NameNode:
+            type: publish-signal(list<string>)
+            name: Default Namenode
+          Primary_NameNode:
+            type: publish-signal(list<string>)
+            name: Primary Namenode
+          Secondary_NameNode:
+            type: publish-signal(list<string>)
+            name: Secondary Namenode
+          Hbase_Master:
+            type: publish-signal(list<string>)
+            name: HBase master server
+          Hbase_MasterDns:
+            type: publish-signal(string)
+            name: HBase master server DNS
+          JobTracker:
+            type: publish-signal(list<string>)
+            name: Jobtracker node
+          cloudera_hdfsWebui:
+            type: publish-signal(list<string>)
+            name: HDFS web UI
+          cloudera_jobtrackerWebui:
+            type: publish-signal(list<string>)
+            name: Jobtracker web UI
+          cloudera_hbaseWebui:
+            type: publish-signal(list<string>)
+            name: HBase web UI
     cloudera-hive:
       type: reference.Submodule
       configuration:
@@ -338,12 +470,24 @@ application:
       required: [vms, cloudera-hadoop]
       interfaces:
         input:
-          identity: configuration(string)
-          repository_url: configuration(string)
-          cookbooks_url: configuration(string)
-          cloudera_hadoop_version: configuration(string)
-          cloudera_manager_version: configuration(string)
-          metastore_root_password: configuration(string)
+          identity:
+            type: configuration(string)
+            name: EC2 image username
+          repository_url:
+            type: configuration(string)
+            name: Cloudera RPM repository
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+          cloudera_hadoop_version:
+            type: configuration(string)
+            name: Cloudera Hadoop version
+          cloudera_manager_version:
+            type: configuration(string)
+            name: Cloudera Manager version
+          metastore_root_password:
+            type: configuration(string)
+            name: MetaStore root password
         vms:
           Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
@@ -362,8 +506,12 @@ application:
           cloudera_jobtrackerWebui: consume-signal(list<string>)
           cloudera_hbaseWebui: consume-signal(list<string>)
         cloudera-hive:
-          Hive_Server: publish-signal(list<string>)
-          Hive_Metastore: publish-signal(list<string>)
+          Hive_Server:
+            type: publish-signal(list<string>)
+            name: Hive server
+          Hive_Metastore:
+            type: publish-signal(list<string>)
+            name: Hive MetaStore server
     cloudera-oozie:
       type: reference.Submodule
       configuration:
@@ -371,11 +519,21 @@ application:
       required: [vms, cloudera-hive]
       interfaces:
         input:
-          identity: configuration(string)
-          repository_url: configuration(string)
-          cookbooks_url: configuration(string)
-          cloudera_hadoop_version: configuration(string)
-          cloudera_manager_version: configuration(string)
+          identity:
+            type: configuration(string)
+            name: EC2 image username
+          repository_url:
+            type: configuration(string)
+            name: Cloudera RPM repository
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+          cloudera_hadoop_version:
+            type: configuration(string)
+            name: Cloudera Hadoop version
+          cloudera_manager_version:
+            type: configuration(string)
+            name: Cloudera Manager version
         vms:
           Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
@@ -387,7 +545,9 @@ application:
           Hive_Server: consume-signal(list<string>)
           Hive_Metastore: consume-signal(list<string>)
         cloudera-oozie:
-          Oozie_Server: publish-signal(list<string>)
+          Oozie_Server:
+            type: publish-signal(list<string>)
+            name: Oozie server
     cloudera-impala:
       type: reference.Submodule
       configuration:
@@ -395,12 +555,24 @@ application:
       required: [vms, cloudera-oozie]
       interfaces:
         input:
-          identity: configuration(string)
-          repository_url: configuration(string)
-          cookbooks_url: configuration(string)
-          cloudera_hadoop_version: configuration(string)
-          cloudera_manager_version: configuration(string)
-          cloudera_impala_version: configuration(string)
+          identity:
+            type: configuration(string)
+            name: EC2 image username
+          repository_url:
+            type: configuration(string)
+            name: Cloudera RPM repository
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+          cloudera_hadoop_version:
+            type: configuration(string)
+            name: Cloudera Hadoop version
+          cloudera_manager_version:
+            type: configuration(string)
+            name: Cloudera Manager version
+          cloudera_impala_version:
+            type: configuration(string)
+            name: Cloudera Impala version
         vms:
           Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
@@ -411,7 +583,9 @@ application:
         cloudera-oozie:
           Oozie_Server: consume-signal(list<string>)
         cloudera-impala:
-          Impala_Master: publish-signal(list<string>)
+          Impala_Master:
+            type: publish-signal(list<string>)
+            name: Impala master server
     cloudera-sqoop:
       type: reference.Submodule
       configuration:
@@ -419,11 +593,21 @@ application:
       required: [vms, cloudera-impala]
       interfaces:
         input:
-          identity: configuration(string)
-          repository_url: configuration(string)
-          cookbooks_url: configuration(string)
-          cloudera_hadoop_version: configuration(string)
-          cloudera_manager_version: configuration(string)
+          identity:
+            type: configuration(string)
+            name: EC2 image username
+          repository_url:
+            type: configuration(string)
+            name: Cloudera RPM repository
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+          cloudera_hadoop_version:
+            type: configuration(string)
+            name: Cloudera Hadoop version
+          cloudera_manager_version:
+            type: configuration(string)
+            name: Cloudera Manager version
         vms:
           Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
@@ -434,7 +618,9 @@ application:
         cloudera-impala:
           Impala_Master: consume-signal(list<string>)
         cloudera-sqoop:
-          Sqoop_Master: publish-signal(list<string>)
+          Sqoop_Master:
+            type: publish-signal(list<string>)
+            name: Sqoop master server
     cloudera-flume:
       type: reference.Submodule
       configuration:
@@ -442,10 +628,18 @@ application:
       required: [vms, cloudera-sqoop]
       interfaces:
         input:
-          identity: configuration(string)
-          repository_url: configuration(string)
-          cookbooks_url: configuration(string)
-          cloudera_hadoop_version: configuration(string)
+          identity:
+            type: configuration(string)
+            name: EC2 image username
+          repository_url:
+            type: configuration(string)
+            name: Cloudera RPM repository
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+          cloudera_hadoop_version:
+            type: configuration(string)
+            name: Cloudera Hadoop version
         vms:
           Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
@@ -456,7 +650,9 @@ application:
         cloudera-sqoop:
           Sqoop_Master: consume-signal(list<string>)
         cloudera-flume:
-          Flume_Status: publish-signal(string)
+          Flume_Status:
+            type: publish-signal(string)
+            name: Flume application status
     cloudera-pig:
       type: reference.Submodule
       configuration:
@@ -464,10 +660,18 @@ application:
       required: [vms, cloudera-flume]
       interfaces:
         input:
-          identity: configuration(string)
-          repository_url: configuration(string)
-          cookbooks_url: configuration(string)
-          cloudera_hadoop_version: configuration(string)
+          identity:
+            type: configuration(string)
+            name: EC2 image username
+          repository_url:
+            type: configuration(string)
+            name: Cloudera RPM repository
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+          cloudera_hadoop_version:
+            type: configuration(string)
+            name: Cloudera Hadoop version
         vms:
           Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
@@ -478,7 +682,9 @@ application:
         cloudera-flume:
           Flume_Status: consume-signal(string)
         cloudera-pig:
-          Pig_Status: publish-signal(string)
+          Pig_Status:
+            type: publish-signal(string)
+            name: Pig application status
     cloudera-solr:
       type: reference.Submodule
       configuration:
@@ -486,12 +692,24 @@ application:
       required: [vms, cloudera-pig]
       interfaces:
         input:
-          identity: configuration(string)
-          repository_url: configuration(string)
-          cookbooks_url: configuration(string)
-          cloudera_hadoop_version: configuration(string)
-          cloudera_manager_version: configuration(string)
-          cloudera_search_version: configuration(string)
+          identity:
+            type: configuration(string)
+            name: EC2 image username
+          repository_url:
+            type: configuration(string)
+            name: Cloudera RPM repository
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+          cloudera_hadoop_version:
+            type: configuration(string)
+            name: Cloudera Hadoop version
+          cloudera_manager_version:
+            type: configuration(string)
+            name: Cloudera Manager version
+          cloudera_search_version:
+            type: configuration(string)
+            name: Cloudera Search version
         vms:
           Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
@@ -502,7 +720,9 @@ application:
         cloudera-pig:
           Pig_Status: consume-signal(string)
         cloudera-solr:
-          Solr_Uri: publish-signal(list<string>)
+          Solr_Uri:
+            type: publish-signal(list<string>)
+            name: Solr connection string
     cloudera-hue:
       type: reference.Submodule
       configuration:
@@ -510,11 +730,21 @@ application:
       required: [vms, cloudera-solr]
       interfaces:
         input:
-          identity: configuration(string)
-          repository_url: configuration(string)
-          cookbooks_url: configuration(string)
-          cloudera_hadoop_version: configuration(string)
-          cloudera_manager_version: configuration(string)
+          identity:
+            type: configuration(string)
+            name: EC2 image username
+          repository_url:
+            type: configuration(string)
+            name: Cloudera RPM repository
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+          cloudera_hadoop_version:
+            type: configuration(string)
+            name: Cloudera Hadoop version
+          cloudera_manager_version:
+            type: configuration(string)
+            name: Cloudera Manager version
         vms:
           Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
@@ -525,5 +755,6 @@ application:
         cloudera-solr:
           Solr_Uri: consume-signal(list<string>)
         cloudera-hue:
-          hue_url: publish-signal(list<string>)
-
+          hue_url:
+            type: publish-signal(list<string>)
+            name: Hue web UI

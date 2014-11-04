@@ -24,7 +24,21 @@ application:
       Hive_Metastore: "bind(cloudera-oozie#cloudera-hive.Hive_Metastore)"
     cloudera-oozie:
       Oozie_Server: "bind(cloudera-oozie#result.Oozie_Server)"
+      application-pic: "bind(metadata#output.application-pic)"
   components:
+    metadata:
+      type: cobalt.common.Constants
+      interfaces:
+        output:
+          application-pic:
+            type: publish-signal(map<string, object>)
+            name: ""
+      configuration:
+        configuration.values:
+          output.application-pic:
+            large: "https://s3.amazonaws.com/qubell-images/oozie_200x.png"
+            small: "https://s3.amazonaws.com/qubell-images/oozie_200x.png"
+            small-height: 47
     cloudera-oozie:
       type: workflow.Instance
       interfaces:
@@ -45,7 +59,9 @@ application:
           Hive_Server: consume-signal(list<string>)
           Hive_Metastore: consume-signal(list<string>)
         result:
-          Oozie_Server: publish-signal(list<string>)
+          Oozie_Server:
+            type: publish-signal(list<string>)
+            name: Oozie server
       required: [vms, cloudera-hive]
       configuration:
         configuration.triggers: {}

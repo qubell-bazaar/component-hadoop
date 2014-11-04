@@ -23,7 +23,21 @@ application:
       Solr_Uri: "bind(cloudera-hue#cloudera-solr.Solr_Uri)"
     cloudera-hue:
       hue_url: "bind(cloudera-hue#result.hue_url)"
+      application-pic: "bind(metadata#output.application-pic)"
   components:
+    metadata:
+      type: cobalt.common.Constants
+      interfaces:
+        output:
+          application-pic:
+            type: publish-signal(map<string, object>)
+            name: ""
+      configuration:
+        configuration.values:
+          output.application-pic:
+            large: "https://s3.amazonaws.com/qubell-images/hue.png"
+            small: "https://s3.amazonaws.com/qubell-images/hue.png"
+            small-height: 128
     cloudera-hue:
       type: workflow.Instance
       interfaces:
@@ -43,7 +57,9 @@ application:
         cloudera-solr:
           Solr_Uri: consume-signal(list<string>)
         result:
-          hue_url: publish-signal(list<string>)
+          hue_url:
+            type: publish-signal(list<string>)
+            name: Hue URL
       required: [vms, cloudera-solr]
       configuration:
         configuration.triggers: {}

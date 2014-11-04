@@ -21,7 +21,21 @@ application:
       Flume_Status: "bind(cloudera-pig#cloudera-flume.Flume_Status)"
     cloudera-pig:
       Pig_Status: "bind(cloudera-pig#result.Pig_Status)"
+      application-pic: "bind(metadata#output.application-pic)"
   components:
+    metadata:
+      type: cobalt.common.Constants
+      interfaces:
+        output:
+          application-pic:
+            type: publish-signal(map<string, object>)
+            name: ""
+      configuration:
+        configuration.values:
+          output.application-pic:
+            large: "https://s3.amazonaws.com/qubell-images/pig-logo.gif"
+            small: "https://s3.amazonaws.com/qubell-images/pig-logo.gif"
+            small-height: 106
     cloudera-pig:
       type: workflow.Instance
       interfaces:
@@ -40,7 +54,9 @@ application:
         cloudera-flume:
           Flume_Status: consume-signal(string)
         result:
-          Pig_Status: publish-signal(string)
+          Pig_Status:
+            type: publish-signal(string)
+            name: Pig status
       required: [vms, cloudera-flume]
       configuration:
         configuration.triggers: {}
