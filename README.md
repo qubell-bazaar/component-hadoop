@@ -1,12 +1,15 @@
 component-hadoop
 ================
 
-![](http://hadoop.apache.org/images/hadoop-logo.jpg) ![](http://www.uk.capgemini.com/sites/default/files/en-gb/2014/07/cloudera-logo.png)
-![](http://www.cloudera.com/content/dam/cloudera/support/ungated/icons/highres_236245562.jpeg = 250x) ![](http://www.cloudera.com/content/dam/cloudera/support/ungated/icons/SQOOP-99d7b6cb4cccb48e.png = 250x ) ![](http://www.cloudera.com/content/dam/cloudera/support/ungated/icons/impala-logo.png = 250x) ![](http://www.cloudera.com/content/dam/cloudera/product-assets/cloudera_search_logo.png = 250x)
+<img src="http://hadoop.apache.org/images/hadoop-logo.jpg" width="100px">
+<img src="http://www.uk.capgemini.com/sites/default/files/en-gb/2014/07/cloudera-logo.png" width="100px">
+<img src="http://www.cloudera.com/content/dam/cloudera/support/ungated/icons/highres_236245562.jpeg" height="50px">
+<img src="http://www.cloudera.com/content/dam/cloudera/support/ungated/icons/SQOOP-99d7b6cb4cccb48e.png" width="100px"> <img src="http://www.cloudera.com/content/dam/cloudera/support/ungated/icons/impala-logo.png" height="50px">
+<img src="http://www.cloudera.com/content/dam/cloudera/product-assets/cloudera_search_logo.png" width="100px">
 
 Installs and configures Cloudera Hadoop
 
-[![Install](https://raw.github.com/qubell-bazaar/component-skeleton/master/img/install.png)](https://express.qubell.com/applications/upload?metadataUrl=https://raw.github.com/qubell-bazaar/component-hadoop/1.0-30p/meta.yml)
+[![Install](https://raw.github.com/qubell-bazaar/component-skeleton/master/img/install.png)](https://express.qubell.com/applications/upload?metadataUrl=https://raw.github.com/qubell-bazaar/component-hadoop/components/meta.yml)
 
 Features
 --------

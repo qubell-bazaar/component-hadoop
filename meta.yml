@@ -2,8 +2,28 @@ kit:
   name: "Cloudera Hadoop"
   link: https://github.com/qubell-bazaar/component-hadoop
   applications:
-    - name: "CD Hadoop"
-      manifest: https://raw.github.com/qubell-bazaar/component-hadoop/1.0-30p/component-hadoop.yml
+    - name: "CDH Main"
+      manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.0-35p/component-hadoop.yml"
+    - name: "Cloudera Flume"
+      manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.0-35p/cloudera-flume.yml"
+    - name: "Cloudera Hadoop"
+      manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.0-35p/cloudera-hadoop.yml"
+    - name: "Cloudera Hive"
+      manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.0-35p/cloudera-hive.yml"
+    - name: "Cloudera Hue"
+      manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.0-35p/cloudera-hue.yml"
+    - name: "Cloudera Impala"
+      manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.0-35p/cloudera-impala.yml"
+    - name: "Cloudera Manager"
+      manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.0-35p/cloudera-manager.yml"
+    - name: "Cloudera Oozie"
+      manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.0-35p/cloudera-oozie.yml"
+    - name: "Cloudera Pig"
+      manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.0-35p/cloudera-pig.yml"
+    - name: "Cloudera Solr"
+      manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.0-35p/cloudera-solr.yml"
+    - name: "Cloudera Sqoop"
+      manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.0-35p/cloudera-sqoop.yml"
   provider:
     name: "Qubell"
     link: http://qubell.com

@@ -1,0 +1,94 @@
+application:
+  configuration:
+    input.identity: "root"
+    input.cookbooks_url: "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-v5.tar.gz"
+    input.repository_url: "http://archive.cloudera.com"
+    input.cloudera_manager_version: "5.1.3"
+    input.cloudera_hadoop_version: "5.1.3"
+  interfaces:
+    input:
+      identity: "bind(cloudera-sqoop#input.identity)"
+      cookbooks_url: "bind(cloudera-sqoop#input.cookbooks_url)"
+      repository_url: "bind(cloudera-sqoop#input.repository_url)"
+      cloudera_manager_version: "bind(cloudera-sqoop#input.cloudera_manager_version)"
+      cloudera_hadoop_version: "bind(cloudera-sqoop#input.cloudera_hadoop_version)"
+    vms:
+      Node_Manager: "bind(cloudera-sqoop#vms.Node_Manager)"
+      Node_Manager_DNS: "bind(cloudera-sqoop#vms.Node_Manager_DNS)"
+      Node_Master: "bind(cloudera-sqoop#vms.Node_Master)"
+      Node_Master_DNS: "bind(cloudera-sqoop#vms.Node_Master_DNS)"
+      DataNodes: "bind(cloudera-sqoop#vms.DataNodes)"
+      DataNodesDNS: "bind(cloudera-sqoop#vms.DataNodesDNS)"
+    cloudera-impala:
+      Impala_Master: "bind(cloudera-sqoop#cloudera-impala.Impala_Master)"
+    cloudera-sqoop:
+      Sqoop_Master: "bind(cloudera-sqoop#result.Sqoop_Master)"
+  components:
+    cloudera-sqoop:
+      type: workflow.Instance
+      interfaces:
+        input:
+          identity: configuration(string)
+          repository_url: configuration(string)
+          cookbooks_url: configuration(string)
+          cloudera_hadoop_version: configuration(string)
+          cloudera_manager_version: configuration(string)
+        vms:
+          Node_Manager: consume-signal(list<string>)
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master: consume-signal(list<string>)
+          Node_Master_DNS: consume-signal(string)
+          DataNodes: consume-signal(list<string>)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-impala:
+          Impala_Master: consume-signal(list<string>)
+        result:
+          Sqoop_Master:
+            type: publish-signal(list<string>)
+            name: Sqoop server
+      required: [vms, cloudera-impala]
+      configuration:
+        configuration.triggers: {}
+        configuration.workflows:
+          launch:
+            steps:
+              - get-env-props:
+                  action: getEnvironmentProperties
+                  output:
+                    props: result
+              - provision-master-node:
+                  action: provisionVms
+                  precedingPhases: [ get-env-props ]
+                  parameters:
+                    roleName: "master"
+                    hardwareId: ""
+                    vmIdentity: "{$.identity}"
+                    staticIps: "{$.props.vms.Node_Master}"
+                  output:
+                    masterIp: ips
+              - install-sqoop:
+                  action: chefrun
+                  precedingPhases: [ provision-master-node ]
+                  parameters:
+                    isSudo: true
+                    isSolo: true
+                    roles: [ "master" ]
+                    recipeUrl: "{$.cookbooks_url}"
+                    runList: [ "recipe[cloudera::sqoop]" ]
+                    retryCount: 2
+                    jattrs:
+                      java:
+                        java_home: "/usr/java/jdk6"
+                      cloudera:
+                        master:
+                          host: "{$.props.vms.Node_Master_DNS}"
+                        manager:
+                          host: "{$.props.vms.Node_Manager_DNS}"
+                          version: "{$.cloudera_manager_version}"
+                        hadoop:
+                          version: "{$.cloudera_hadoop_version}"
+                        repository_url: "{$.repository_url}"
+            return:
+              - Sqoop_Master:
+                  description: "Sqoop server node"
+                  value: "{$.props.vms.Node_Master}"

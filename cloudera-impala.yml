@@ -1,0 +1,137 @@
+application:
+  configuration:
+    input.identity: "root"
+    input.cookbooks_url: "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-v5.tar.gz"
+    input.repository_url: "http://archive.cloudera.com"
+    input.cloudera_manager_version: "5.1.3"
+    input.cloudera_hadoop_version: "5.1.3"
+    input.cloudera_impala_version: "1.4.0"
+  interfaces:
+    input:
+      identity: "bind(cloudera-impala#input.identity)"
+      cookbooks_url: "bind(cloudera-impala#input.cookbooks_url)"
+      repository_url: "bind(cloudera-impala#input.repository_url)"
+      cloudera_manager_version: "bind(cloudera-impala#input.cloudera_manager_version)"
+      cloudera_hadoop_version: "bind(cloudera-impala#input.cloudera_hadoop_version)"
+      cloudera_impala_version: "bind(cloudera-impala#input.cloudera_impala_version)"
+    vms:
+      Node_Manager: "bind(cloudera-impala#vms.Node_Manager)"
+      Node_Manager_DNS: "bind(cloudera-impala#vms.Node_Manager_DNS)"
+      Node_Master: "bind(cloudera-impala#vms.Node_Master)"
+      Node_Master_DNS: "bind(cloudera-impala#vms.Node_Master_DNS)"
+      DataNodes: "bind(cloudera-impala#vms.DataNodes)"
+      DataNodesDNS: "bind(cloudera-impala#vms.DataNodesDNS)"
+    cloudera-oozie:
+      Oozie_Server: "bind(cloudera-impala#cloudera-oozie.Oozie_Server)"
+    cloudera-impala:
+      Impala_Master: "bind(cloudera-impala#result.Impala_Master)"
+  components:
+    cloudera-impala:
+      type: workflow.Instance
+      interfaces:
+        input:
+          identity: configuration(string)
+          repository_url: configuration(string)
+          cookbooks_url: configuration(string)
+          cloudera_hadoop_version: configuration(string)
+          cloudera_manager_version: configuration(string)
+          cloudera_impala_version: configuration(string)
+        vms:
+          Node_Manager: consume-signal(list<string>)
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master: consume-signal(list<string>)
+          Node_Master_DNS: consume-signal(string)
+          DataNodes: consume-signal(list<string>)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-oozie:
+          Oozie_Server: consume-signal(list<string>)
+        result:
+          Impala_Master:
+            type: publish-signal(list<string>)
+            name: Impala master server
+      required: [vms, cloudera-oozie]
+      configuration:
+        configuration.triggers: {}
+        configuration.workflows:
+          launch:
+            steps:
+              - get-env-props:
+                  action: getEnvironmentProperties
+                  output:
+                    props: result
+              - provision-manager-node:
+                  action: provisionVms
+                  precedingPhases: [ get-env-props ]
+                  parameters:
+                    roleName: "manager"
+                    hardwareId: ""
+                    vmIdentity: "{$.identity}"
+                    staticIps: "{$.props.vms.Node_Manager}"
+                  output:
+                    managerIp: ips
+              - provision-datanode:
+                  action: provisionVms
+                  precedingPhases: [ get-env-props ]
+                  parameters:
+                    roleName: "datanode"
+                    hardwareId: ""
+                    vmIdentity: "{$.identity}"
+                    staticIps: "{$.props.vms.DataNodes}"
+                  output:
+                    datanodeIps: ips
+              - provision-master-node:
+                  action: provisionVms
+                  precedingPhases: [ get-env-props ]
+                  parameters:
+                    roleName: "master"
+                    hardwareId: ""
+                    vmIdentity: "{$.identity}"
+                    staticIps: "{$.props.vms.Node_Master}"
+                  output:
+                    masterIp: ips
+              - install-impala-pkg:
+                  action: chefrun
+                  precedingPhases: [ provision-manager-node, provision-datanode, provision-master-node ]
+                  parameters:
+                    isSudo: true
+                    isSolo: true
+                    roles: [ "master", "manager", "datanode" ]
+                    recipeUrl: "{$.cookbooks_url}"
+                    runList: [ "recipe[cloudera::impala_pkg]" ]
+                    retryCount: 2
+                    jattrs:
+                      cloudera:
+                        impala:
+                          version: "{$.cloudera_impala_version}"
+                        hadoop:
+                          version: "{$.cloudera_hadoop_version}"
+                        manager:
+                          version: "{$.cloudera_manager_version}"
+                        repository_url: "{$.repository_url}"
+              - start-impala:
+                  action: chefrun
+                  precedingPhases: [ install-impala-pkg ]
+                  parameters:
+                    isSudo: true
+                    isSolo: true
+                    roles: [ "master" ]
+                    recipeUrl: "{$.cookbooks_url}"
+                    runList: [ "recipe[cloudera::impala_start]" ]
+                    jattrs:
+                      java:
+                        java_home: "/usr/java/jdk6"
+                      cloudera:
+                        master:
+                          host: "{$.props.vms.Node_Master_DNS}"
+                        manager:
+                          host: "{$.props.vms.Node_Manager_DNS}"
+                          version: "{$.cloudera_manager_version}"
+                        datanodes:
+                          hosts: "{$.props.vms.DataNodes}"
+                        hadoop:
+                          version: "{$.cloudera_hadoop_version}"
+                        repository_url: "{$.repository_url}"
+            return:
+              - Impala_Master: 
+                  description: "Impala server node"
+                  value: "{$.props.vms.Node_Manager}"

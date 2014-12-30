@@ -1,926 +1,772 @@
 application:
   configuration:
-    input.repository_url:                     "http://archive.cloudera.com" # origin cloudera archive: "http://archive.cloudera.com"
-    input.cdh_ami:                            "us-west-1/ami-0e073d4b"
-    #input.cdh_ami:                            "us-east-1/ami-ee698586"
-    input.cluster_prefix:                     "cdh_default_name"
-    input.cookbooks_url:                      "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-16aaba4.tar.gz"
-    input.datanodes:                          "5"
-    input.master_hardware:                    "m3.large"
-    input.datanode_hardware:                  "m3.large"
-    input.cloudera_hadoop_version:            "5.1.3"
-    input.cloudera_manager_version:           "5.1.3"
-    input.cloudera_search_version:            "1.3.0"
-    input.cloudera_impala_version:            "1.4.0"
-    input.metastore_root_password:            "hive"
+    input.ami: "us-east-1/ami-ee698586"
+    #input.ami: "us-west-1/ami-0e073d4b"
+    input.identity: "root"
+    input.master_hardware: "m3.large"
+    input.datanode_hardware: "m3.large"
+    input.datanodes_quantity: "5"
+    input.cluster_prefix: "CDH"
+    input.cookbooks_url: "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-f55a41b.tar.gz"
+    input.repository_url: "http://archive.cloudera.com"
+    input.cloudera_hadoop_version: "5.1.3"
+    input.cloudera_manager_version: "5.1.3"
+    input.cloudera_search_version: "1.3.0"
+    input.cloudera_impala_version: "1.4.0"
+    input.metastore_root_password: "hive"
   interfaces:
     input:
-      repository_url:                         "bind(workflow#input.repository_url)"
-      cdh_ami:                                "bind(workflow#input.cdh_ami)"
-      cluster_prefix:                         "bind(workflow#input.cluster_prefix)"
-      cookbooks_url:                          "bind(workflow#input.cookbooks_url)"
-      datanodes:                              "bind(workflow#input.datanodes)"
-      master_hardware:                        "bind(workflow#input.master_hardware)"
-      datanode_hardware:                      "bind(workflow#input.datanode_hardware)"
-      cloudera_hadoop_version:                "bind(workflow#input.cloudera_hadoop_version)"
-      cloudera_manager_version:               "bind(workflow#input.cloudera_manager_version)"
-      cloudera_search_version:                "bind(workflow#input.cloudera_search_version)"
-      cloudera_impala_version:                "bind(workflow#input.cloudera_impala_version)"
-      metastore_root_password:                "bind(workflow#input.metastore_root_password)"
-    management:
-      upload-dataset:                         "bind(workflow#actions.upload-dataset)"
+      ami: "bind(vms#input.ami)"
+      identity: "bind(vms#input.identity, cloudera-manager#input.identity, cloudera-hadoop#input.identity, cloudera-hive#input.identity, cloudera-oozie#input.identity, cloudera-impala#input.identity, cloudera-sqoop#input.identity, cloudera-flume#input.identity, cloudera-pig#input.identity, cloudera-solr#input.identity, cloudera-hue#input.identity)"
+      master_hardware: "bind(vms#input.master_hardware)"
+      datanode_hardware: "bind(vms#input.datanode_hardware)"
+      datanodes_quantity: "bind(vms#input.datanodes_quantity)"
+      cluster_prefix: "bind(vms#input.cluster_prefix)"
+      cookbooks_url: "bind(vms#input.cookbooks_url, cloudera-manager#input.cookbooks_url, cloudera-hadoop#input.cookbooks_url, cloudera-hive#input.cookbooks_url, cloudera-oozie#input.cookbooks_url, cloudera-impala#input.cookbooks_url, cloudera-sqoop#input.cookbooks_url, cloudera-flume#input.cookbooks_url, cloudera-pig#input.cookbooks_url, cloudera-solr#input.cookbooks_url, cloudera-hue#input.cookbooks_url)"
+      repository_url: "bind(cloudera-manager#input.repository_url, cloudera-hadoop#input.repository_url, cloudera-hive#input.repository_url, cloudera-oozie#input.repository_url, cloudera-impala#input.repository_url, cloudera-sqoop#input.repository_url, cloudera-flume#input.repository_url, cloudera-pig#input.repository_url, cloudera-solr#input.repository_url, cloudera-hue#input.repository_url)"
+      cloudera_manager_version: "bind(cloudera-manager#input.cloudera_manager_version, cloudera-hadoop#input.cloudera_manager_version, cloudera-hive#input.cloudera_manager_version, cloudera-oozie#input.cloudera_manager_version, cloudera-impala#input.cloudera_manager_version, cloudera-sqoop#input.cloudera_manager_version, cloudera-solr#input.cloudera_manager_version, cloudera-hue#input.cloudera_manager_version)"
+      cloudera_hadoop_version: "bind(cloudera-hadoop#input.cloudera_hadoop_version,cloudera-hive#input.cloudera_hadoop_version, cloudera-oozie#input.cloudera_hadoop_version, cloudera-impala#input.cloudera_hadoop_version, cloudera-sqoop#input.cloudera_hadoop_version, cloudera-flume#input.cloudera_hadoop_version, cloudera-pig#input.cloudera_hadoop_version, cloudera-solr#input.cloudera_hadoop_version, cloudera-hue#input.cloudera_hadoop_version)"
+      metastore_root_password: "bind(cloudera-hive#input.metastore_root_password)"
+      cloudera_impala_version: "bind(cloudera-impala#input.cloudera_impala_version)"
+      cloudera_search_version: "bind(cloudera-solr#input.cloudera_search_version)"
     Cloudera:
-      Manager:                                "bind(workflow#result.cloudera_Manager)"
-      Login:                                  "bind(workflow#result.cloudera_Login)"
-      Password:                               "bind(workflow#result.cloudera_Password)"
-      ApiUrl:                                 "bind(workflow#result.cloudera_ApiUrl)"
-      HDFS:                                   "bind(workflow#result.cloudera_hdfsWebui)"
-      HBase:                                  "bind(workflow#result.cloudera_hbaseWebui)"
-      JobTracker:                             "bind(workflow#result.cloudera_jobtrackerWebui)"
-    Oozie:
-      Server:                                 "bind(workflow#result.Oozie_Server)"
-    Hdfs:
-      DataNodes:                              "bind(workflow#result.DataNode)"
-      DataDns:                                "bind(workflow#result.DataDns)"
-      NameNode:                               "bind(workflow#result.NameNode)"
-      NameNode1:                              "bind(workflow#result.Primary_NameNode)"
-      NameNode2:                              "bind(workflow#result.Secondary_NameNode)"
-    Hbase:
-      Master:                                 "bind(workflow#result.Hbase_Master)"
-      MasterDns:                              "bind(workflow#result.Hbase_MasterDns)"
-    Management:
-      Manager:                                "bind(workflow#result.Node_Manager)"
-      ManagerDns:                             "bind(workflow#result.Node_ManagerDns)"
-    MapReduce:
-      JobTrackerIp:                             "bind(workflow#result.JobTracker)"
-    Hive:
-      Server:                                 "bind(workflow#result.Hive_Server)"
-      Metastore:                              "bind(workflow#result.Hive_Metastore)"
-    Hue:
-      HueUrl:                                 "bind(workflow#result.hue_url)"
+      application-pic: "bind(metadata#output.application-pic)"
+      manager: "bind(cloudera-manager#cloudera-manager.Manager_URL)"
+      login: "bind(cloudera-manager#cloudera-manager.Login)"
+      password: "bind(cloudera-manager#cloudera-manager.Password)"
+      datanodes: "bind(vms#result.DataNodes)"
+      cpu-timeseries: "bind(monitoring#result.cpu-timeseries)"
+      upload-data: "bind(cloudera-hadoop#cloudera-hadoop.upload-data)"
+      cleanup-data: "bind(cloudera-hadoop#cloudera-hadoop.cleanup-data)"
+      run-workflow: "bind(cloudera-oozie#cloudera-oozie.run-workflow)"
+  bindings:
+    - [vms, cloudera-manager]
+    - [vms, cloudera-hadoop]
+    - [vms, cloudera-hive]
+    - [vms, cloudera-oozie]
+    - [vms, cloudera-impala]
+    - [vms, cloudera-sqoop]
+    - [vms, cloudera-flume]
+    - [vms, cloudera-pig]
+    - [vms, cloudera-solr]
+    - [vms, cloudera-hue]
+    - [cloudera-hadoop, cloudera-manager]
+    - [cloudera-hive, cloudera-hadoop]
+    - [cloudera-oozie, cloudera-hive]
+    - [cloudera-impala, cloudera-oozie]
+    - [cloudera-sqoop, cloudera-impala]
+    - [cloudera-flume, cloudera-sqoop]
+    - [cloudera-pig, cloudera-flume]
+    - [cloudera-solr, cloudera-pig]
+    - [cloudera-hue, cloudera-solr]
+    - [monitoring, vms]
+    - [monitoring, cloudera-manager]
+    - [monitoring, cloudera-hue]
   components:
-    workflow:
+    metadata:
+      type: cobalt.common.Constants
+      interfaces:
+        output:
+          application-pic:
+            type: publish-signal(map<string, object>)
+            name: ""
+      configuration:
+        configuration.values:
+          output.application-pic:
+            large: "https://s3.amazonaws.com/qubell-images/hadoop.png"
+            small: "https://s3.amazonaws.com/qubell-images/hadoop_med.png"
+            small-height: 64
+    monitoring:
+      type: workflow.Instance
+      required: [ vms, cloudera-hue, cloudera-manager ]
+      interfaces:
+        cloudera-hue:
+          hue_url: consume-signal(list<string>)
+        vms:
+          Node_Manager: consume-signal(list<string>)
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master: consume-signal(list<string>)
+          Node_Master_DNS: consume-signal(string)
+          DataNodes: consume-signal(list<string>)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-manager:
+          Manager_URL: consume-signal(string)
+          Login: consume-signal(string)
+          Password: consume-signal(string)
+        result:
+          cpu-timeseries:
+            type: publish-signal(map<string, list<object>>)
+            name: CPU usage
+      configuration:
+        configuration.triggers: {}
+        configuration.schedule:
+          update: "0 0/5 * * * ? *"
+        configuration.workflows:
+          launch: &launch
+            steps:
+              - getSignals:
+                  action: getSignals
+                  output:
+                    env: result
+              - getCpu:
+                  action: restcall
+                  precedingPhases: [ getSignals ]
+                  parameters:
+                    command: "http://{$.env.vms.Node_Manager[0]}:7180/api/v4/timeseries?query=select+cpu_percent_across_hosts+where+category+%3D+CLUSTER"
+                    method: GET
+                    auth:
+                      type: basic
+                      user: "{$.env.cloudera-manager.Login}"
+                      password: "{$.env.cloudera-manager.Password}"
+                    contentType: application/json
+                  output:
+                    cpu: content
+            return:
+              cpu-timeseries:
+                description: "CPU graph"
+                value: "{$.cpu}"
+          update: *launch
+
+    vms:
       type: workflow.Instance
       interfaces:
-        input:   # these are the input parameters that will be available to all workflows within the component
-          repository_url:                     configuration(string)
-          cdh_ami:                            configuration(string)
-          cluster_prefix:                     configuration(string)
-          cookbooks_url:                      configuration(string)
-          datanodes:                          configuration(string)
-          master_hardware:                    configuration(string)
-          datanode_hardware:                  configuration(string)
-          cloudera_hadoop_version:            configuration(string)
-          cloudera_manager_version:           configuration(string)
-          cloudera_search_version:            configuration(string)
-          cloudera_impala_version:            configuration(string)
-          metastore_root_password:            configuration(string)
-        actions:
-          upload-dataset: receive-command(string datasetpath, string dstpath, string awsAccessId, string awsSecretKey)
-        result:  # should be string instead of list<string>
-          NameNode:                           publish-signal(list<string>)
-          Primary_NameNode:                   publish-signal(list<string>)
-          Secondary_NameNode:                 publish-signal(list<string>)
-          Oozie_Server:                       publish-signal(list<string>)
-          Hbase_Master:                       publish-signal(list<string>)
-          Hbase_MasterDns:                    publish-signal(string)
-          JobTracker:                         publish-signal(list<string>)
-          Hive_Server:                        publish-signal(list<string>)
-          Hive_Metastore:                     publish-signal(list<string>)
-          DataNode:                           publish-signal(list<string>)
-          DataDns:                            publish-signal(list<string>)
-          Node_Master:                        publish-signal(list<string>)
-          Node_Manager:                       publish-signal(list<string>)
-          Node_MasterDns:                     publish-signal(string)
-          Node_ManagerDns:                    publish-signal(string)
-          cloudera_hdfsWebui:                 publish-signal(list<string>)
-          cloudera_jobtrackerWebui:           publish-signal(list<string>)
-          cloudera_hbaseWebui:                publish-signal(list<string>)
-          cloudera_Manager:                   publish-signal(list<string>)
-          cloudera_Login:                     publish-signal(string)
-          cloudera_Password:                  publish-signal(string)
-          cloudera_ApiUrl:                    publish-signal(list<string>)
-          hue_url:                            publish-signal(list<string>)
+        input:
+          ami:
+            type: configuration(string)
+            name: EC2 image
+          identity:
+            type: configuration(string)
+            name: EC2 image username
+          #  type: configuration(map<string,object>)
+          #  suggestions:
+          #    east: {image: "us-east-1/ami-ee698586", identity: "root"}
+          #    west: {image: "us-west-1/ami-0e073d4b", identity: "root"}
+          master_hardware:
+            type: configuration(string)
+            name: Master node hardware type
+          datanode_hardware:
+            type: configuration(string)
+            name: Data nodes hardware type
+          datanodes_quantity:
+            type: configuration(string)
+            name: No. of data nodes
+          cluster_prefix:
+            type: configuration(string)
+            name: EC2 node name prefix
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+        result:
+          Node_Manager:
+            type: publish-signal(list<string>)
+            name: Manager node
+          Node_Manager_DNS:
+            type: publish-signal(string)
+            name: Manager node DNS
+          Node_Master:
+            type: publish-signal(list<string>)
+            name: Master node
+          Node_Master_DNS:
+            type: publish-signal(string)
+            name: Master node DNS
+          DataNodes:
+            type: publish-signal(list<string>)
+            name: Data nodes
+          DataNodesDNS:
+            type: publish-signal(list<string>)
+            name: Data nodes DNS
       required: []
       configuration:
         configuration.triggers: {}
         configuration.workflows:
-            launch:
-                steps:
-                    - get_env_props:
-                        action: getEnvironmentProperties
-                        phase: get-env-props
-                        output:
-                            config: result
-                    - provision-hadoop-manager:
-                        action: .provision-node
-                        phase: provision-node
-                        precedingPhases: [ get-env-props ]
-                        parameters:
-                            roleName: "manager"
-                            hardwareId: "{$.master_hardware}"
-                            quantity: 1
-                        output:
-                            managerIp: ips
-                            managerDns: dns
-                    - provision-hadoop-master:
-                        action: .provision-node
-                        phase: provision-node
-                        precedingPhases: [ get-env-props ]
-                        parameters:
-                            roleName: "master"
-                            hardwareId: "{$.master_hardware}"
-                            quantity: 1
-                        output:
-                            masterIp: ips
-                            masterDns: dns
-                    - provision-datanode:
-                        action: .provision-node
-                        phase: provision-node
-                        precedingPhases: [ get-env-props ]
-                        parameters:
-                            roleName: "datanode"
-                            hardwareId: "{$.datanode_hardware}"
-                            quantity: "{$.datanodes}"
-                        output:
-                            datanodeIps: ips
-                            datanodeDns: dns
+          launch:
+            steps:
+              - get_env_props:
+                  action: getEnvironmentProperties
+                  phase: get-env-props
+                  output:
+                    config: result
+              - provision-hadoop-manager:
+                  action: .provision-node
+                  phase: provision-node
+                  precedingPhases: [ get-env-props ]
+                  parameters:
+                      roleName: "manager"
+                      hardwareId: "{$.master_hardware}"
+                      quantity: 1
+                  output:
+                      managerIp: ips
+                      managerDns: dns
+              - provision-hadoop-master:
+                  action: .provision-node
+                  phase: provision-node
+                  precedingPhases: [ get-env-props ]
+                  parameters:
+                      roleName: "master"
+                      hardwareId: "{$.master_hardware}"
+                      quantity: 1
+                  output:
+                      masterIp: ips
+                      masterDns: dns
+              - provision-datanode:
+                  action: .provision-node
+                  phase: provision-node
+                  precedingPhases: [ get-env-props ]
+                  parameters:
+                      roleName: "datanode"
+                      hardwareId: "{$.datanode_hardware}"
+                      quantity: "{$.datanodes_quantity}"
+                  output:
+                      datanodeIps: ips
+                      datanodeDns: dns
+              - update-hosts:
+                  action: chefrun
+                  phase: update-hosts
+                  precedingPhases: [ provision-node ]
+                  parameters:
+                      isSudo: true
+                      isSolo: true
+                      roles: [ "datanode", "manager", "master" ]
+                      recipeUrl: "{$.cookbooks_url}"
+                      runList: [ "recipe[cloudera::hosts_aws]" ]
+                      jattrs:
+                          base:
+                              hosts_aws: [ "{$.masterDns[*]}", "{$.managerDns[*]}", "{$.datanodeDns[*]}" ]
+            return:
+              - Node_Manager:
+                  value: "{$.managerIp}"
+              - Node_Manager_DNS:
+                  value: "{$.managerDns[*][0]}"
+              - Node_Master:
+                  value: "{$.masterIp}"
+              - Node_Master_DNS:
+                  value: "{$.masterDns[*][0]}"
+              - DataNodes:
+                  value: "{$.datanodeIps}"
+              - DataNodesDNS:
+                  value: "{$.datanodeDns[*]}"
 
-                    - install-ephemeral:
-                        action: chefrun
-                        phase: install-ephemeral
-                        precedingPhases: [ provision-node ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "datanode", "manager", "master" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::ephemeral]" ]
-
-                    - update-hosts:
-                        action: chefrun
-                        phase: update-hosts
-                        precedingPhases: [ provision-node ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "datanode", "manager", "master" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::hosts_aws]" ]
-                            jattrs:
-                                base:
-                                    hosts_aws: [ "{$.masterDns[*]}", "{$.managerDns[*]}", "{$.datanodeDns[*]}" ]
-
-                    # Install HADOOP
-                    - install-cloudera-java:
-                        action: chefrun
-                        phase: install-java
-                        precedingPhases: [ update-hosts ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "master", "manager", "datanode" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[java]" ]
-                            jattrs:
-                                java:
-                                  install_flavor: "oracle"
-                                  jdk_version: "6"
-                                  java_home: "/usr/java/jdk6"
-                                  oracle:
-                                    accept_oracle_download_terms: "true"
-
-                    - install-mysql-client:
-                        action: chefsolo
-                        phase: install-mysql-client
-                        precedingPhases: [ install-java ]
-                        parameters:
-                            roles: [ "master", "manager", "datanode" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[mysql::client]" ]
-
-                    - install-cloudera-manager:
-                        action: chefrun
-                        phase: install-manager
-                        precedingPhases: [ install-mysql-client ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "manager" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::manager]" ]
-                            retryCount: 2
-                            jattrs:
-                                cloudera:
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-                                    manager:
-                                        version: "{$.cloudera_manager_version}"
-                                    repository_url: "{$.repository_url}"
-
-                    - install-cloudera-agent:
-                        action: chefrun
-                        phase: install-agent
-                        precedingPhases: [ install-manager ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "master", "manager", "datanode" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::agent]" ]
-                            retryCount: 2
-                            jattrs:
-                                cloudera:
-                                    manager:
-                                        host: "{$.managerDns[*][0]}"
-                                        version: "{$.cloudera_manager_version}"
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-                                    repository_url: "{$.repository_url}"
-
-                    - start-cloudera-agent:
-                        action: chefrun
-                        phase: start-agent
-                        precedingPhases: [ install-agent ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "master", "manager", "datanode" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::start_agent]" ]
-
-                    - install-cloudera-cms:
-                        action: chefrun
-                        phase: install-cms
-                        precedingPhases: [ start-agent ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "manager" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::cms]" ]
-                            retryCount: 2
-                            jattrs:
-                                cloudera:
-                                    manager:
-                                        host: "{$.managerDns[*][0]}"
-
-                    - install-cdh-packages:
-                        action: chefrun
-                        precedingPhases: [ install-cloudera-cms ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: ["master", "manager", "datanode"]
-                            runList: ["cloudera::cdh"]
-                            recipeUrl: "{$.cookbooks_url}"
-                            retryCount: 2
-                            jattrs:
-                                cloudera:
-                                    repository_url: "{$.repository_url}"
-                                    hadoop:
-                                      version: "{$.cloudera_hadoop_version}"
-
-                    - provision-hadoop:
-                        action: chefrun
-                        phase: provision-hadoop
-                        precedingPhases: [ install-cdh-packages ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "manager" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::clusters_init]", "recipe[cloudera::hadoop_services_start]" ]
-                            retryCount: 2
-                            jattrs:
-                                cloudera:
-                                    services: [ "hdfs" ]
-                                    manager:
-                                        host: "{$.managerDns[*][0]}"
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-                                    clusters:
-                                        default:
-                                            services:
-                                                zookeeper:
-                                                    server:
-                                                        hosts: [ "{$.masterIp[0]}", "{$.managerIp[0]}", "{$.datanodeIps[0]}" ]
-                                                hdfs:
-                                                    namenode:
-                                                        hosts: "{$.masterIp}"
-                                                        config:
-                                                            dfs_name_dir_list: "/srv/dfs/nn"
-                                                    secondarynamenode:
-                                                        hosts: "{$.managerIp}"
-                                                        config:
-                                                            fs_checkpoint_dir_list: "/srv/dfs/snn"
-                                                    datanode:
-                                                        hosts: "{$.datanodeIps}"
-                                                        config:
-                                                            log_threshold: "WARN"
-                                                            dfs_data_dir_list: "/srv/dfs/dn"
-                                                            dfs_datanode_data_dir_perm: "755"
-                                                            datanode_config_safety_valve: |
-                                                                                            <property>
-                                                                                                <name>dfs.block.local-path-access.user</name>
-                                                                                                <value>hbase</value>
-                                                                                            </property>
-                                                mapreduce:
-                                                    jobtracker:
-                                                        hosts: "{$.managerIp}"
-                                                    tasktracker:
-                                                        hosts: "{$.datanodeIps}"
-                                                        config:
-                                                            mapred_tasktracker_map_tasks_maximum: 6
-                                                            mapred_tasktracker_reduce_tasks_maximum: 4
-
-                                    repository_url: "{$.repository_url}"
-
-                    - init-hadoop-dirs:
-                        action: execrun
-                        phase: init-hadoop-dirs
-                        precedingPhases: [ provision-hadoop ]
-                        parameters:
-                            isSudo: true
-                            roles: [ "master" ]
-                            command:
-                                - bash
-                                - '-c'
-                                - |
-                                  su hdfs -c "hadoop fs -mkdir -p /tmp";
-                                  su hdfs -c "hadoop fs -chmod 1777 /tmp";
-                                  su hdfs -c "hadoop fs -mkdir /hbase";
-                                  su hdfs -c "hadoop fs -chown hbase:hbase /hbase";
-                                  su hdfs -c "hadoop fs -mkdir /user";
-                                  su hdfs -c "hadoop fs -mkdir /user/mapred";
-                                  su hdfs -c "hadoop fs -chown mapred:mapred /user/mapred";
-
-                    - start-hadoop:
-                        action: chefrun
-                        phase: start-hadoop
-                        precedingPhases: [ init-hadoop-dirs ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "manager" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::hadoop_services_start]" ]
-                            jattrs:
-                                cloudera:
-                                    services: [ "zookeeper", "mapreduce" ]
-                                    manager:
-                                        host: "{$.managerDns[*][0]}"
-                                    repository_url: "{$.repository_url}"
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-
-                    - install-hbase:
-                        action: chefrun
-                        phase: install-hbase
-                        precedingPhases: [ start-hadoop ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "manager" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::hbase]" ]
-                            retryCount: 2
-                            jattrs:
-                                cloudera:
-                                    master:
-                                        host: "{$.masterDns[*][0]}"
-                                    manager:
-                                        host: "{$.managerDns[*][0]}"
-                                        version: "{$.cloudera_manager_version}"
-                                    datanodes:
-                                        hosts: "{$.datanodeIps}"
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-                                    repository_url: "{$.repository_url}"
-
-                    - packages-hive:
-                        action: chefrun
-                        phase: packages-hive
-                        precedingPhases: [ init-hadoop-dirs ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "manager" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::hive_rc]" ]
-                            retryCount: 2
-                            jattrs:
-                                cloudera:
-                                    master:
-                                        host: "{$.masterDns[*][0]}"
-                                    manager:
-                                        host: "{$.managerDns[*][0]}"
-                                        version: "{$.cloudera_manager_version}"
-                                    datanodes:
-                                        hosts: "{$.datanodeDns[*]}"
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-                                    repository_url: "{$.repository_url}"
-                                mysql:
-                                    server_debian_password: "{$.metastore_root_password}"
-                                    server_root_password: "{$.metastore_root_password}"
-                                    server_repl_password: "{$.metastore_root_password}"
-                                    bind_address: "127.0.0.1"
-
-                    - packages-client-hive:
-                        action: chefrun
-                        phase: packages-clients-hive
-                        precedingPhases: [ packages-hive ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "master", "datanode" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::hive_client_pkg]" ]
-                            retryCount: 2
-                            jattrs:
-                                cloudera:
-                                    master:
-                                        host: "{$.masterDns[*][0]}"
-                                    manager:
-                                        host: "{$.managerDns[*][0]}"
-                                        version: "{$.cloudera_manager_version}"
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-                                    repository_url: "{$.repository_url}"
-
-                    - services-hive:
-                        action: chefrun
-                        precedingPhases: [ packages-clients-hive, install-hbase ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "manager" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::hive]" ]
-                            retryCount: 2
-                            jattrs:
-                                cloudera:
-                                    master:
-                                        host: "{$.masterDns[*][0]}"
-                                    manager:
-                                        host: "{$.managerDns[*][0]}"
-                                        version: "{$.cloudera_manager_version}"
-                                    datanodes:
-                                        hosts: "{$.datanodeIps}"
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-                                    repository_url: "{$.repository_url}"
-
-                    - install-oozie:
-                        action: chefrun
-                        phase: install-oozie
-                        precedingPhases: [ services-hive ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "manager" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::oozie]" ]
-                            retryCount: 2
-                            jattrs:
-                                cloudera:
-                                    master:
-                                        host: "{$.masterDns[*][0]}"
-                                        ip: "{$.masterIp[0]}"
-                                    manager:
-                                        host: "{$.managerDns[*][0]}"
-                                        version: "{$.cloudera_manager_version}"
-                                    jobtracker:
-                                        host: "{$.managerDns[*][0]}"
-                                        ip: "{$.managerIp[0]}"
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-                                    repository_url: "{$.repository_url}"
-
-                    - start-oozie:
-                        action: chefrun
-                        phase: start-oozie
-                        precedingPhases: [ install-oozie, services-hive ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "manager" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::start_oozie]" ]
-                            retryCount: 2
-                            jattrs:
-                                cloudera:
-                                    manager:
-                                        host: "{$.managerDns[*][0]}"
-                                        version: "{$.cloudera_manager_version}"
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-                                    repository_url: "{$.repository_url}"
-
-                    - install-impala-pkg:
-                        action: chefrun
-                        phase: install-impala-pkg
-                        precedingPhases: [ start-oozie ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "master", "manager", "datanode" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::impala_pkg]" ]
-                            retryCount: 2
-                            jattrs:
-                                cloudera:
-                                    impala:
-                                        version: "{$.cloudera_impala_version}"
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-                                    manager:
-                                        version: "{$.cloudera_manager_version}"
-                                    repository_url: "{$.repository_url}"
-
-                    - start-impala:
-                        action: chefrun
-                        phase: start-impala
-                        precedingPhases: [ install-impala-pkg ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "master" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::impala_start]" ]
-                            retryCount: 2
-                            jattrs:
-                                cloudera:
-                                    master:
-                                        host: "{$.masterDns[*][0]}"
-                                    manager:
-                                        host: "{$.managerDns[*][0]}"
-                                        version: "{$.cloudera_manager_version}"
-                                    datanodes:
-                                        hosts: "{$.datanodeIps}"
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-                                    repository_url: "{$.repository_url}"
-
-                    - install-sqoop:
-                        action: chefrun
-                        phase: install-sqoop
-                        precedingPhases: [ start-impala ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "master" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::sqoop]" ]
-                            retryCount: 2
-                            jattrs:
-                                cloudera:
-                                    master:
-                                        host: "{$.masterDns[*][0]}"
-                                    manager:
-                                        host: "{$.managerDns[*][0]}"
-                                        version: "{$.cloudera_manager_version}"
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-                                    repository_url: "{$.repository_url}"
-
-                    - install-flume-pkg:
-                        action: chefrun
-                        phase: install-flume-pkg
-                        precedingPhases: [ install-sqoop ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "master", "manager", "datanode" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::flume_pkg]" ]
-                            retryCount: 2
-                            jattrs:
-                              cloudera:
-                                hadoop:
-                                  version: "{$.cloudera_hadoop_version}"
-                                repository_url: "{$.repository_url}"
-
-                    - install-pig:
-                        action: chefrun
-                        phase: install-pig
-                        precedingPhases: [ install-flume-pkg ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "manager" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::pig]" ]
-                            retryCount: 2
-                            jattrs:
-                                cloudera:
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-                                    repository_url: "{$.repository_url}"
-
-                    - install-solr-pkg:
-                        action: chefrun
-                        phase: install-solr-pkg
-                        precedingPhases: [ install-pig ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "master", "manager", "datanode" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::solr_pkg]" ]
-                            retryCount: 2
-                            jattrs:
-                                cloudera:
-                                    search:
-                                        version: "{$.cloudera_search_version}"
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-                                    manager:
-                                        version: "{$.cloudera_manager_version}"
-                                    repository_url: "{$.repository_url}"
-
-                    - start-solr:
-                        action: chefrun
-                        phase: start-solr
-                        precedingPhases: [ install-solr-pkg ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "master" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::solr_start]" ]
-                            retryCount: 2
-                            jattrs:
-                                cloudera:
-                                    master:
-                                        host: "{$.masterDns[*]}"
-                                    manager:
-                                        host: "{$.managerDns[*][0]}"
-                                        version: "{$.cloudera_manager_version}"
-                                    datanodes:
-                                        hosts: "{$.datanodeDns[*]}"
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-                                    repository_url: "{$.repository_url}"
-
-                    - install-ks-indexer:
-                        action: chefrun
-                        phase: install-ks-indexer
-                        precedingPhases: [ start-solr ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "master" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::search]" ]
-                            retryCount: 2
-                            jattrs:
-                                cloudera:
-                                    master:
-                                        host: "{$.masterDns[*]}"
-                                    manager:
-                                        host: "{$.managerDns[*][0]}"
-                                        version: "{$.cloudera_manager_version}"
-                                    datanodes:
-                                        hosts: "{$.datanodeDns[*]}"
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-                                    repository_url: "{$.repository_url}"
-
-                    - install-hue:
-                        action: chefrun
-                        phase: install-hue
-                        precedingPhases: [ install-ks-indexer ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "manager" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::hue]" ]
-                            retryCount: 2
-                            jattrs:
-                                cloudera:
-                                    manager:
-                                        host: "{$.managerDns[*][0]}"
-                                        version: "{$.cloudera_manager_version}"
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-                                    repository_url: "{$.repository_url}"
-
-                    - start-hue:
-                        action: chefrun
-                        phase: start-hue
-                        precedingPhases: [ install-hue ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "manager" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::restart_hue]" ]
-                            retryCount: 2
-                            jattrs:
-                                cloudera:
-                                    manager:
-                                        host: "{$.managerDns[*][0]}"
-                                        version: "{$.cloudera_manager_version}"
-                                    hadoop:
-                                        version: "{$.cloudera_hadoop_version}"
-                                    repository_url: "{$.repository_url}"
-
-                return:
-                    - Oozie_Server:
-                        description:                "Oozie server node"
-                        value:                      "{$.managerIp}"
-                    - NameNode:
-                        description:                "Name Node for HA if available"
-                        value:                      "{$.masterIp}"
-                    - Primary_NameNode:
-                        description:                "Primary NameNode"
-                        value:                      "{$.masterIp}"
-                    - Secondary_NameNode:
-                        description:                "Secondary NameNode"
-                        value:                      "{$.managerIp}"
-                    - Hbase_Master:
-                        description:                "Hbase node"
-                        value:                      "{$.managerIp}"
-                    - Hbase_MasterDns:
-                        description:                "Hbase Master Dns Name"
-                        value:                      "{$.managerDns[*][0]}"
-                    - JobTracker:
-                        description:                "Job Tracker node"
-                        value:                      "{$.managerIp}"
-                    - Hive_Server:
-                        description:                "Hive server node"
-                        value:                      "{$.managerIp}"
-                    - Hive_Metastore:
-                        description:                "Hive Metastore node"
-                        value:                      "{$.managerIp}"
-                    - DataNode:
-                        description:                "List of data nodes"
-                        value:                      "{$.datanodeIps}"
-                    - DataDns:
-                        description:                "Data node DNS"
-                        value:                      "{$.datanodeDns[*]}"
-                    - Node_Master:
-                        description:                "Master node"
-                        value:                      "{$.masterIp}"
-                    - Node_Manager:
-                        description:                "Manager node"
-                        value:                      "{$.managerIp}"
-                    - Node_MasterDns:
-                        description:                "Master node DNS"
-                        value:                      "{$.masterDns[*][0]}"
-                    - Node_ManagerDns:
-                        description:                "Manager node DNS"
-                        value:                      "{$.managerDns[*][0]}"
-                    - cloudera_hdfsWebui:
-                        description:                "Namenode (HDFS)"
-                        value:                      "http://{$.masterIp}:50070"
-                    - cloudera_jobtrackerWebui:
-                        description:                "Job Tracker (MapReduce)"
-                        value:                      "http://{$.managerIp}:50030"
-                    - cloudera_hbaseWebui:
-                        description:                "Master (HBase)"
-                        value:                      "http://{$.managerIp}:60010"
-                    - cloudera_Manager:
-                        description:                "Cloudera Manager"
-                        value:                      "http://{$.managerIp}:7180"
-                    - hue_url:
-                        description:                "Hue URL"
-                        value:                      "http://{$.managerIp}:8888"
-                    - cloudera_Login:
-                        description:                "Login for Cloudera Manager"
-                        value:                      "admin"
-                    - cloudera_Password:
-                        description:                "Password for Cloudera Manager"
-                        value:                      "admin"
-                    - cloudera_ApiUrl:
-                        description:                "Url to Cloudera Api"
-                        value:                      "http://{$.managerIp}:7180/api/v3/clusters/Default/"
-
-
-            upload-dataset:
-                parameters:
-                    - datasetpath:
-                        description: Amazon S3 or HDFS link to dataset
-                        type: string
-                        default: s3n://ringcentraldemo/dataset10g
-
-                    - dstpath:
-                        description: Relative path in Cluster HDFS to save dataset
-                        type: string
-                        default: 'hdfs:///tmp/dataset'
-
-                    - awsAccessId:
-                        description: Amazon Web Services Access ID
-                        type: string
-
-                    - awsSecretKey:
-                        description: Amazon Web Services Service Key
-                        type: string
-
-                steps:
-                    - upload-data:
-                        action: chefrun
-                        phase: upload-data
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "master" ]
-                            recipeUrl: "{$.cookbooks_url}"
-                            runList: [ "recipe[cloudera::upload_data]" ]
-                            jattrs:
-                                dataset:
-                                    src_path: "{$.datasetpath}"
-                                    dst_path: "{$.dstpath}"
-                                aws:
-                                    accessId: "{$.awsAccessId}"
-                                    secretKey: "{$.awsSecretKey}"
-
-            .provision-node:
-                parameters:
-                    - roleName:
-                        description: Role for the provisioned node
-                    - hardwareId:
-                        description: Hardware id
-                    - quantity:
-                        description: Number of nodes to start
-                steps:
-                    - provision-node:
-                        action: provisionAmazonVm
-                        phase: provision
-                        parameters:
-                            roleName: "{$.roleName}"
-                            imageId: "{$.cdh_ami}"
-                            vmIdentity: root
-                            hardwareId: "{$.hardwareId}"
-                            quantity: "{$.quantity}"
-                            jcloudsNodeNamePrefix: "{$.cluster_prefix}"
-                        output:
-                            PublicIPs: ips
-                    - link-folders:
-                        action: execrun
-                        precedingPhases: [ provision ]
-                        parameters:
-                          isSudo: true
-                          roles: [ "{$.roleName}" ]
-                          command:
-                              - bash
-                              - "-c"
-                              - |
-                                    mkdir -p /srv &&
-                                    mkdir -p /opt/srv &&
-                                    mkdir -p /opt/tmp &&
-                                    chmod -R 777 /opt/srv &&
-                                    chmod -R 777 /opt/tmp &&
-                                    mount --bind /opt/tmp /tmp &&
-                                    mount --bind /opt/srv /srv
-                    - set-hostname:
-                        action: execrun
-                        phase: post-provision
-                        precedingPhases: [ link-folders ]
-                        parameters:
-                            isSudo: true
-                            roles: [ "{$.roleName}" ]
-                            command:
-                                - bash
-                                - "-c"
-                                - |
-                                    hostname `curl -s http://169.254.169.254/latest/meta-data/public-hostname` &&
-                                    echo "`hostname -i`   `hostname`" >> /etc/hosts &&
-                                    hostname
-                        output:
-                            dns: stdout
-                    - install-ntp:
-                        action: chefrun
-                        phase: post-provision
-                        precedingPhases: [ link-folders ]
-                        parameters:
-                            isSudo: true
-                            isSolo: true
-                            roles: [ "{$.roleName}" ]
-                            runList: ["recipe[ntp]"]
-                            recipeUrl: "{$.cookbooks_url}"
-                            jattrs:
-                              ntp:
-                                servers: ["0.amazon.pool.ntp.org"]
-                    - add-cdh-repo:
-                        action: chefrun
-                        precedingPhases: [ post-provision ]
-                        parameters:
-                          isSudo: true
-                          isSolo: true
-                          roles: [ "{$.roleName}" ]
-                          runList: ["cloudera::cdh_repo"]
-                          recipeUrl: "{$.cookbooks_url}"
-                          jattrs:
-                            cloudera:
-                              repository_url: "{$.repository_url}"
-                              hadoop:
-                                version: "{$.cloudera_hadoop_version}"
-                return:
-                    ips:
-                        value: "{$.PublicIPs}"
-                    dns:
-                        value: "{$.dns}"
+          .provision-node:
+              parameters:
+                - roleName:
+                    description: Role for the provisioned node
+                - hardwareId:
+                    description: Hardware id
+                - quantity:
+                    description: Number of nodes to start
+              steps:
+                - provision-node:
+                    action: provisionAmazonVm
+                    phase: provision
+                    parameters:
+                      roleName: "{$.roleName}"
+                      imageId: "{$.ami}"
+                      vmIdentity: "{$.identity}"
+                      hardwareId: "{$.hardwareId}"
+                      quantity: "{$.quantity}"
+                      jcloudsNodeNamePrefix: "{$.cluster_prefix}"
+                    output:
+                      PublicIPs: ips
+                - link-folders:
+                    action: execrun
+                    precedingPhases: [ provision ]
+                    parameters:
+                      isSudo: true
+                      roles: [ "{$.roleName}" ]
+                      command:
+                          - bash
+                          - "-c"
+                          - |
+                                mkdir -p /srv &&
+                                mkdir -p /opt/srv &&
+                                mkdir -p /opt/tmp &&
+                                mkdir -p /opt/log &&
+                                mkdir -p /opt/tmp/debug &&
+                                chmod -R 777 /opt/srv &&
+                                chmod -R 777 /opt/tmp &&
+                                chmod -R 777 /opt/log &&
+                                mount --bind /opt/tmp /tmp &&
+                                mount --bind /opt/srv /srv &&
+                                mount --bind /opt/log /var/log &&
+                                ln -s /opt/tmp/debug /usr/lib/debug
+                - set-hostname:
+                    action: execrun
+                    phase: post-provision
+                    precedingPhases: [ link-folders ]
+                    parameters:
+                      isSudo: true
+                      roles: [ "{$.roleName}" ]
+                      command:
+                          - bash
+                          - "-c"
+                          - |
+                                hostname `curl -s http://169.254.169.254/latest/meta-data/public-hostname` &&
+                                echo "`hostname -i`   `hostname`" >> /etc/hosts &&
+                                hostname
+                    output:
+                      dns: stdout
+                - install-ntp:
+                    action: chefrun
+                    phase: post-provision
+                    precedingPhases: [ link-folders ]
+                    parameters:
+                      isSudo: true
+                      isSolo: true
+                      roles: [ "{$.roleName}" ]
+                      runList: ["recipe[ntp]"]
+                      recipeUrl: "{$.cookbooks_url}"
+                      jattrs:
+                        ntp:
+                          servers: ["0.amazon.pool.ntp.org"]
+                - install-ephemeral:
+                    action: chefrun
+                    phase: install-ephemeral
+                    precedingPhases: [ post-provision ]
+                    parameters:
+                      isSudo: true
+                      isSolo: true
+                      roles: [ "{$.roleName}" ]
+                      recipeUrl: "{$.cookbooks_url}"
+                      runList: [ "recipe[cloudera::ephemeral]" ]
+                - install-java:
+                    action: chefrun
+                    precedingPhases: [ install-ephemeral ]
+                    parameters:
+                      isSudo: true
+                      isSolo: true
+                      roles: ["{$.roleName}"]
+                      recipeUrl: "{$.cookbooks_url}"
+                      runList: [ "recipe[java]" ]
+                      jattrs:
+                        java:
+                          install_flavor: "oracle"
+                          jdk_version: "6"
+                          java_home: "/usr/java/jdk6"
+                          oracle:
+                            accept_oracle_download_terms: "true"
+                - install-mysql-client:
+                    action: chefrun
+                    precedingPhases: [install-java]
+                    parameters:
+                      isSudo: true
+                      isSolo: true
+                      roles: [ "{$.roleName}" ]
+                      recipeUrl: "{$.cookbooks_url}"
+                      runList: [ "recipe[mysql::client]" ]
+                - disable-iptables:
+                    action: execrun
+                    precedingPhases: [ install-java ]
+                    parameters:
+                      isSudo: true
+                      roles: [ "{$.roleName}" ]
+                      command:
+                          - bash
+                          - "-c"
+                          - |
+                                /etc/init.d/iptables stop
+              return:
+                ips:
+                  value: "{$.PublicIPs}"
+                dns:
+                  value: "{$.dns}"
+    cloudera-manager:
+      type: reference.Submodule
+      configuration:
+        __locator.application-id: "Cloudera Manager"
+      required: [vms]
+      interfaces:
+        input:
+          identity:
+            type: configuration(string)
+            name: EC2 image username
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+          repository_url:
+            type: configuration(string)
+            name: Cloudera RPM repository
+          cloudera_manager_version:
+            type: configuration(string)
+            name: Cloudera Manager version
+        vms:
+          Node_Manager: consume-signal(list<string>)
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master: consume-signal(list<string>)
+          Node_Master_DNS: consume-signal(string)
+          DataNodes: consume-signal(list<string>)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-manager:
+          Manager_URL:
+            type: publish-signal(string)
+            name: Manager URL
+          Login:
+            type: publish-signal(string)
+            name: Login
+          Password:
+            type: publish-signal(string)
+            name: Password
+    cloudera-hadoop:
+      type: reference.Submodule
+      configuration:
+        __locator.application-id: "Cloudera Hadoop"
+      required: [vms, cloudera-manager]
+      interfaces:
+        input:
+          identity:
+            type: configuration(string)
+            name: EC2 image username
+          repository_url:
+            type: configuration(string)
+            name: Cloudera RPM repository
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+          cloudera_hadoop_version:
+            type: configuration(string)
+            name: Cloudera Hadoop version
+          cloudera_manager_version:
+            type: configuration(string)
+            name: Cloudera Manager version
+        vms:
+          Node_Manager: consume-signal(list<string>)
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master: consume-signal(list<string>)
+          Node_Master_DNS: consume-signal(string)
+          DataNodes: consume-signal(list<string>)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-manager:
+          Manager_URL: consume-signal(string)
+          Login: consume-signal(string)
+          Password: consume-signal(string)
+        cloudera-hadoop:
+          NameNode:
+            type: publish-signal(list<string>)
+            name: Default Namenode
+          Primary_NameNode:
+            type: publish-signal(list<string>)
+            name: Primary Namenode
+          Secondary_NameNode:
+            type: publish-signal(list<string>)
+            name: Secondary Namenode
+          Hbase_Master:
+            type: publish-signal(list<string>)
+            name: HBase master server
+          Hbase_MasterDns:
+            type: publish-signal(string)
+            name: HBase master server DNS
+          JobTracker:
+            type: publish-signal(list<string>)
+            name: Jobtracker node
+          cloudera_hdfsWebui:
+            type: publish-signal(list<string>)
+            name: HDFS web UI
+          cloudera_jobtrackerWebui:
+            type: publish-signal(list<string>)
+            name: Jobtracker web UI
+          cloudera_hbaseWebui:
+            type: publish-signal(list<string>)
+            name: HBase web UI
+          upload-data:
+            type: receive-command(string archive-url => string data-dir, string data-url)
+            name: Upload data
+          cleanup-data:
+            type: receive-command(string data-dir)
+            name: Cleanup data
+    cloudera-hive:
+      type: reference.Submodule
+      configuration:
+        __locator.application-id: "Cloudera Hive"
+      required: [vms, cloudera-hadoop]
+      interfaces:
+        input:
+          identity:
+            type: configuration(string)
+            name: EC2 image username
+          repository_url:
+            type: configuration(string)
+            name: Cloudera RPM repository
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+          cloudera_hadoop_version:
+            type: configuration(string)
+            name: Cloudera Hadoop version
+          cloudera_manager_version:
+            type: configuration(string)
+            name: Cloudera Manager version
+          metastore_root_password:
+            type: configuration(string)
+            name: MetaStore root password
+        vms:
+          Node_Manager: consume-signal(list<string>)
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master: consume-signal(list<string>)
+          Node_Master_DNS: consume-signal(string)
+          DataNodes: consume-signal(list<string>)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-hadoop:
+          NameNode: consume-signal(list<string>)
+          Primary_NameNode: consume-signal(list<string>)
+          Secondary_NameNode: consume-signal(list<string>)
+          Hbase_Master: consume-signal(list<string>)
+          Hbase_MasterDns: consume-signal(string)
+          JobTracker: consume-signal(list<string>)
+          cloudera_hdfsWebui: consume-signal(list<string>)
+          cloudera_jobtrackerWebui: consume-signal(list<string>)
+          cloudera_hbaseWebui: consume-signal(list<string>)
+        cloudera-hive:
+          Hive_Server:
+            type: publish-signal(list<string>)
+            name: Hive server
+          Hive_Metastore:
+            type: publish-signal(list<string>)
+            name: Hive MetaStore server
+    cloudera-oozie:
+      type: reference.Submodule
+      configuration:
+        __locator.application-id: "Cloudera Oozie"
+      required: [vms, cloudera-hive]
+      interfaces:
+        input:
+          identity:
+            type: configuration(string)
+            name: EC2 image username
+          repository_url:
+            type: configuration(string)
+            name: Cloudera RPM repository
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+          cloudera_hadoop_version:
+            type: configuration(string)
+            name: Cloudera Hadoop version
+          cloudera_manager_version:
+            type: configuration(string)
+            name: Cloudera Manager version
+        vms:
+          Node_Manager: consume-signal(list<string>)
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master: consume-signal(list<string>)
+          Node_Master_DNS: consume-signal(string)
+          DataNodes: consume-signal(list<string>)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-hive:
+          Hive_Server: consume-signal(list<string>)
+          Hive_Metastore: consume-signal(list<string>)
+        cloudera-oozie:
+          Oozie_Server:
+            type: publish-signal(list<string>)
+            name: Oozie server
+          run-workflow:
+            type: receive-command(string archive-url, string data-dir => string status)
+            name: Run workflow
+    cloudera-impala:
+      type: reference.Submodule
+      configuration:
+        __locator.application-id: "Cloudera Impala"
+      required: [vms, cloudera-oozie]
+      interfaces:
+        input:
+          identity:
+            type: configuration(string)
+            name: EC2 image username
+          repository_url:
+            type: configuration(string)
+            name: Cloudera RPM repository
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+          cloudera_hadoop_version:
+            type: configuration(string)
+            name: Cloudera Hadoop version
+          cloudera_manager_version:
+            type: configuration(string)
+            name: Cloudera Manager version
+          cloudera_impala_version:
+            type: configuration(string)
+            name: Cloudera Impala version
+        vms:
+          Node_Manager: consume-signal(list<string>)
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master: consume-signal(list<string>)
+          Node_Master_DNS: consume-signal(string)
+          DataNodes: consume-signal(list<string>)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-oozie:
+          Oozie_Server: consume-signal(list<string>)
+        cloudera-impala:
+          Impala_Master:
+            type: publish-signal(list<string>)
+            name: Impala master server
+    cloudera-sqoop:
+      type: reference.Submodule
+      configuration:
+        __locator.application-id: "Cloudera Sqoop"
+      required: [vms, cloudera-impala]
+      interfaces:
+        input:
+          identity:
+            type: configuration(string)
+            name: EC2 image username
+          repository_url:
+            type: configuration(string)
+            name: Cloudera RPM repository
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+          cloudera_hadoop_version:
+            type: configuration(string)
+            name: Cloudera Hadoop version
+          cloudera_manager_version:
+            type: configuration(string)
+            name: Cloudera Manager version
+        vms:
+          Node_Manager: consume-signal(list<string>)
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master: consume-signal(list<string>)
+          Node_Master_DNS: consume-signal(string)
+          DataNodes: consume-signal(list<string>)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-impala:
+          Impala_Master: consume-signal(list<string>)
+        cloudera-sqoop:
+          Sqoop_Master:
+            type: publish-signal(list<string>)
+            name: Sqoop master server
+    cloudera-flume:
+      type: reference.Submodule
+      configuration:
+        __locator.application-id: "Cloudera Flume"
+      required: [vms, cloudera-sqoop]
+      interfaces:
+        input:
+          identity:
+            type: configuration(string)
+            name: EC2 image username
+          repository_url:
+            type: configuration(string)
+            name: Cloudera RPM repository
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+          cloudera_hadoop_version:
+            type: configuration(string)
+            name: Cloudera Hadoop version
+        vms:
+          Node_Manager: consume-signal(list<string>)
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master: consume-signal(list<string>)
+          Node_Master_DNS: consume-signal(string)
+          DataNodes: consume-signal(list<string>)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-sqoop:
+          Sqoop_Master: consume-signal(list<string>)
+        cloudera-flume:
+          Flume_Status:
+            type: publish-signal(string)
+            name: Flume application status
+    cloudera-pig:
+      type: reference.Submodule
+      configuration:
+       __locator.application-id: "Cloudera Pig"
+      required: [vms, cloudera-flume]
+      interfaces:
+        input:
+          identity:
+            type: configuration(string)
+            name: EC2 image username
+          repository_url:
+            type: configuration(string)
+            name: Cloudera RPM repository
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+          cloudera_hadoop_version:
+            type: configuration(string)
+            name: Cloudera Hadoop version
+        vms:
+          Node_Manager: consume-signal(list<string>)
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master: consume-signal(list<string>)
+          Node_Master_DNS: consume-signal(string)
+          DataNodes: consume-signal(list<string>)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-flume:
+          Flume_Status: consume-signal(string)
+        cloudera-pig:
+          Pig_Status:
+            type: publish-signal(string)
+            name: Pig application status
+    cloudera-solr:
+      type: reference.Submodule
+      configuration:
+        __locator.application-id: "Cloudera Solr"
+      required: [vms, cloudera-pig]
+      interfaces:
+        input:
+          identity:
+            type: configuration(string)
+            name: EC2 image username
+          repository_url:
+            type: configuration(string)
+            name: Cloudera RPM repository
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+          cloudera_hadoop_version:
+            type: configuration(string)
+            name: Cloudera Hadoop version
+          cloudera_manager_version:
+            type: configuration(string)
+            name: Cloudera Manager version
+          cloudera_search_version:
+            type: configuration(string)
+            name: Cloudera Search version
+        vms:
+          Node_Manager: consume-signal(list<string>)
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master: consume-signal(list<string>)
+          Node_Master_DNS: consume-signal(string)
+          DataNodes: consume-signal(list<string>)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-pig:
+          Pig_Status: consume-signal(string)
+        cloudera-solr:
+          Solr_Uri:
+            type: publish-signal(list<string>)
+            name: Solr connection string
+    cloudera-hue:
+      type: reference.Submodule
+      configuration:
+        __locator.application-id: "Cloudera Hue"
+      required: [vms, cloudera-solr]
+      interfaces:
+        input:
+          identity:
+            type: configuration(string)
+            name: EC2 image username
+          repository_url:
+            type: configuration(string)
+            name: Cloudera RPM repository
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+          cloudera_hadoop_version:
+            type: configuration(string)
+            name: Cloudera Hadoop version
+          cloudera_manager_version:
+            type: configuration(string)
+            name: Cloudera Manager version
+        vms:
+          Node_Manager: consume-signal(list<string>)
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master: consume-signal(list<string>)
+          Node_Master_DNS: consume-signal(string)
+          DataNodes: consume-signal(list<string>)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-solr:
+          Solr_Uri: consume-signal(list<string>)
+        cloudera-hue:
+          hue_url:
+            type: publish-signal(list<string>)
+            name: Hue web UI
