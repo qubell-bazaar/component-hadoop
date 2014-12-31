@@ -1,6 +1,9 @@
 component-hadoop
 ================
 
+Version 2.0-35p
+-------------
+
 <img src="http://hadoop.apache.org/images/hadoop-logo.jpg" width="100px">
 <img src="http://www.uk.capgemini.com/sites/default/files/en-gb/2014/07/cloudera-logo.png" width="100px">
 <img src="http://www.cloudera.com/content/dam/cloudera/support/ungated/icons/highres_236245562.jpeg" height="50px">
@@ -9,7 +12,7 @@ component-hadoop
 
 Installs and configures Cloudera Hadoop
 
-[![Install](https://raw.github.com/qubell-bazaar/component-skeleton/master/img/install.png)](https://express.qubell.com/applications/upload?metadataUrl=https://raw.github.com/qubell-bazaar/component-hadoop/components/meta.yml)
+[![Install](https://raw.github.com/qubell-bazaar/component-skeleton/master/img/install.png)](https://express.qubell.com/applications/upload?metadataUrl=https://raw.github.com/qubell-bazaar/component-hadoop/2.0-35p/meta.yml)
 
 Features
 --------
