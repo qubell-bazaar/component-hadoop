@@ -3,7 +3,7 @@ kit:
   link: https://github.com/qubell-bazaar/component-hadoop
   applications:
     - name: "CDH Main"
-      manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.0-35p/component-hadoop.yml"
+      manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.0-36p/component-hadoop.yml"
     - name: "Cloudera Flume"
       manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.0-35p/cloudera-flume.yml"
     - name: "Cloudera Hadoop"
