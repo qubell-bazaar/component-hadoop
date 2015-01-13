@@ -1,21 +1,22 @@
 application:
   configuration:
-    input.identity: "root"
-    input.cookbooks_url: "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-v5.tar.gz"
-    input.repository_url: "http://archive.cloudera.com"
-    input.cloudera_manager_version: "5.1.3"
+    configuration.cookbooks_url: "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-v5.tar.gz"
+    configuration.repository_url: "http://archive.cloudera.com"
+    configuration.cloudera_manager_version: "5.1.3"
   interfaces:
-    input:
-      identity: "bind(cloudera-manager#input.identity)"
+    configuration:
       cookbooks_url: "bind(cloudera-manager#input.cookbooks_url)"
       repository_url: "bind(cloudera-manager#input.repository_url)"
       cloudera_manager_version: "bind(cloudera-manager#input.cloudera_manager_version)"
+    compute-Manager: 
+      "*": "bind(cloudera-manager#compute-Manager.*)"
+    compute-Master:  
+      "*": "bind(cloudera-manager#compute-Master.*)"
+    compute-DataNodes:
+      "*": "bind(cloudera-manager#compute-DataNodes.*)"
     vms:
-      Node_Manager: "bind(cloudera-manager#vms.Node_Manager)"
       Node_Manager_DNS: "bind(cloudera-manager#vms.Node_Manager_DNS)"
-      Node_Master: "bind(cloudera-manager#vms.Node_Master)"
       Node_Master_DNS: "bind(cloudera-manager#vms.Node_Master_DNS)"
-      DataNodes: "bind(cloudera-manager#vms.DataNodes)"
       DataNodesDNS: "bind(cloudera-manager#vms.DataNodesDNS)"
     cloudera-manager:
       Manager_URL: "bind(cloudera-manager#result.cloudera_Manager)"
@@ -40,9 +41,6 @@ application:
       type: workflow.Instance
       interfaces:
         input:
-          identity:
-            type: configuration(string)
-            name: EC2 image username
           repository_url:
             type: configuration(string)
             name: Cloudera RPM repository
@@ -52,12 +50,24 @@ application:
           cloudera_manager_version:
             type: configuration(string)
             name: Cloudera Manager version
+        compute-Master:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-Manager:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-DataNodes:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
         vms:
-          Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
-          Node_Master: consume-signal(list<string>)
           Node_Master_DNS: consume-signal(string)
-          DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
         result:
           cloudera_Manager:
@@ -69,53 +79,25 @@ application:
           cloudera_Password:
             type: publish-signal(string)
             name: Password
-      required: [vms]
+      required: [vms, compute-Manager, compute-Master, compute-DataNodes]
       configuration:
         configuration.triggers: {}
         configuration.workflows:
           launch:
             steps:
-              - get-env-props:
-                  action: getEnvironmentProperties
-                  output:
-                    props: result
-              - provision-manager-node:
-                  action: provisionVms
-                  precedingPhases: [ get-env-props ]
+              - get-signals:
+                  action: getSignals
                   parameters:
-                    roleName: "manager"
-                    hardwareId: ""
-                    vmIdentity: "{$.identity}"
-                    staticIps: "{$.props.vms.Node_Manager}"
+                    multi: true
                   output:
-                    managerIp: ips
-              - provision-datanode:
-                  action: provisionVms
-                  precedingPhases: [ get-env-props ]
-                  parameters:
-                    roleName: "datanode"
-                    hardwareId: ""
-                    vmIdentity: "{$.identity}"
-                    staticIps: "{$.props.vms.DataNodes}"
-                  output:
-                    datanodeIps: ips
-              - provision-master-node:
-                  action: provisionVms
-                  precedingPhases: [ get-env-props ]
-                  parameters:
-                    roleName: "master"
-                    hardwareId: ""
-                    vmIdentity: "{$.identity}"
-                    staticIps: "{$.props.vms.Node_Master}"
-                  output:
-                    masterIp: ips
+                    signals: result
               - install-cloudera-manager:
                   action: chefrun
-                  precedingPhases: [provision-manager-node]
+                  precedingPhases: [ get-signals ]
                   parameters:
                     isSudo: true
                     isSolo: true
-                    roles: ["manager"]
+                    roles: ["compute-Manager"]
                     recipeUrl: "{$.cookbooks_url}"
                     runList: [ "recipe[cloudera::manager]" ]
                     retryCount: 2
@@ -132,7 +114,7 @@ application:
                   parameters:
                     isSudo: true
                     isSolo: true
-                    roles: [ "master", "manager", "datanode" ]
+                    roles: [ "compute-Master", "compute-Manager", "compute-DataNodes" ]
                     recipeUrl: "{$.cookbooks_url}"
                     runList: [ "recipe[cloudera::agent]" ]
                     retryCount: 2
@@ -141,7 +123,7 @@ application:
                         java_home: "/usr/java/jdk6"
                       cloudera:
                         manager:
-                          host: "{$.props.vms.Node_Manager_DNS}"
+                          host: "{$.signals.vms.*.Node_Manager_DNS[0]}"
                           version: "{$.cloudera_manager_version}"
                           #hadoop:
                           #  version: "{$.cloudera_hadoop_version}"
@@ -153,7 +135,7 @@ application:
                   parameters:
                     isSudo: true
                     isSolo: true
-                    roles: [ "master", "manager", "datanode" ]
+                    roles: [ "compute-Master", "compute-Manager", "compute-DataNodes" ]
                     recipeUrl: "{$.cookbooks_url}"
                     runList: [ "recipe[cloudera::start_agent]" ]
 
@@ -163,7 +145,7 @@ application:
                   parameters:
                     isSudo: true
                     isSolo: true
-                    roles: [ "manager" ]
+                    roles: [ "compute-Manager" ]
                     recipeUrl: "{$.cookbooks_url}"
                     runList: [ "recipe[cloudera::cms]" ]
                     retryCount: 2
@@ -172,12 +154,12 @@ application:
                         java_home: "/usr/java/jdk6"
                       cloudera:
                         manager:
-                          host: "{$.props.vms.Node_Manager_DNS}"
+                          host: "{$.signals.vms.*.Node_Manager_DNS[0]}"
                         repository_url: "{$.repository_url}"
             return:
               - cloudera_Manager:
                   description: "Cloudera Manager URL"
-                  value: "http://{$.managerIp[0]}:7180"
+                  value: "http://{$.signals.compute-Manager.*.networks.public.ip[0]}:7180"
               - cloudera_Login:
                   description: "Login for Cloudera Manager"
                   value: "admin"

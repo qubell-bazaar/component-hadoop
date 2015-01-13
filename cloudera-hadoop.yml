@@ -1,23 +1,24 @@
 application:
   configuration:
-    input.identity: "root"
-    input.cookbooks_url: "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-v5.tar.gz"
-    input.repository_url: "http://archive.cloudera.com"
-    input.cloudera_manager_version: "5.1.3"
-    input.cloudera_hadoop_version: "5.1.3"
+    configuration.cookbooks_url: "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-v5.tar.gz"
+    configuration.repository_url: "http://archive.cloudera.com"
+    configuration.cloudera_manager_version: "5.1.3"
+    configuration.cloudera_hadoop_version: "5.1.3"
   interfaces:
-    input:
-      identity: "bind(cloudera-hadoop#input.identity)"
+    configuration:
       cookbooks_url: "bind(cloudera-hadoop#input.cookbooks_url)"
       repository_url: "bind(cloudera-hadoop#input.repository_url)"
       cloudera_manager_version: "bind(cloudera-hadoop#input.cloudera_manager_version)"
       cloudera_hadoop_version: "bind(cloudera-hadoop#input.cloudera_hadoop_version)"
+    compute-Manager: 
+      "*": "bind(cloudera-hadoop#compute-Manager.*)"
+    compute-Master:  
+      "*": "bind(cloudera-hadoop#compute-Master.*)"
+    compute-DataNodes:
+      "*": "bind(cloudera-hadoop#compute-DataNodes.*)"
     vms:
-      Node_Manager: "bind(cloudera-hadoop#vms.Node_Manager)"
       Node_Manager_DNS: "bind(cloudera-hadoop#vms.Node_Manager_DNS)"
-      Node_Master: "bind(cloudera-hadoop#vms.Node_Master)"
       Node_Master_DNS: "bind(cloudera-hadoop#vms.Node_Master_DNS)"
-      DataNodes: "bind(cloudera-hadoop#vms.DataNodes)"
       DataNodesDNS: "bind(cloudera-hadoop#vms.DataNodesDNS)"
     cloudera-manager:
       Manager_URL: "bind(cloudera-hadoop#cloudera-manager.cloudera_Manager)"
@@ -54,9 +55,6 @@ application:
       type: workflow.Instance
       interfaces:
         input:
-          identity:
-            type: configuration(string)
-            name: EC2 image username
           repository_url:
             type: configuration(string)
             name: Cloudera RPM repository
@@ -76,12 +74,24 @@ application:
           cleanup-data:
             type: receive-command(string data-dir)
             name: Cleanup data
+        compute-Master:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-Manager:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-DataNodes:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
         vms:
-          Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
-          Node_Master: consume-signal(list<string>)
           Node_Master_DNS: consume-signal(string)
-          DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
         cloudera-manager:
           cloudera_Manager: consume-signal(string)
@@ -115,53 +125,25 @@ application:
           cloudera_hbaseWebui:
             type: publish-signal(list<string>)
             name: HBase UI
-      required: [vms, cloudera-manager]
+      required: [vms, cloudera-manager, compute-Manager, compute-Master, compute-DataNodes]
       configuration:
         configuration.triggers: {}
         configuration.workflows:
           launch:
             steps:
-              - get-env-props:
-                  action: getEnvironmentProperties
-                  output:
-                    props: result
-              - provision-manager-node:
-                  action: provisionVms
-                  precedingPhases: [ get-env-props ]
+              - get-signals:
+                  action: getSignals
                   parameters:
-                    roleName: "manager"
-                    hardwareId: ""
-                    vmIdentity: "{$.identity}"
-                    staticIps: "{$.props.vms.Node_Manager}"
+                    multi: true
                   output:
-                    managerIp: ips
-              - provision-datanode:
-                  action: provisionVms
-                  precedingPhases: [ get-env-props ]
-                  parameters:
-                    roleName: "datanode"
-                    hardwareId: ""
-                    vmIdentity: "{$.identity}"
-                    staticIps: "{$.props.vms.DataNodes}"
-                  output:
-                    datanodeIps: ips
-              - provision-master-node:
-                  action: provisionVms
-                  precedingPhases: [ get-env-props ]
-                  parameters:
-                    roleName: "master"
-                    hardwareId: ""
-                    vmIdentity: "{$.identity}"
-                    staticIps: "{$.props.vms.Node_Master}"
-                  output:
-                    masterIp: ips
+                    signals: result
               - add-cdh-repo:
                   action: chefrun
-                  precedingPhases: [ provision-manager-node, provision-datanode, provision-master-node ]
+                  precedingPhases: [ get-signals ]
                   parameters:
                     isSudo: true
                     isSolo: true
-                    roles: [ "master", "manager", "datanode" ]
+                    roles: [ "compute-Master", "compute-Manager", "compute-DataNodes" ]
                     runList: ["cloudera::cdh_repo"]
                     recipeUrl: "{$.cookbooks_url}"
                     retryCount: 2
@@ -176,7 +158,7 @@ application:
                   parameters:
                     isSudo: true
                     isSolo: true
-                    roles: ["master", "manager", "datanode"]
+                    roles: [ "compute-Master", "compute-Manager", "compute-DataNodes" ]
                     runList: ["cloudera::cdh"]
                     recipeUrl: "{$.cookbooks_url}"
                     retryCount: 2
@@ -192,7 +174,7 @@ application:
                   parameters:
                     isSudo: true
                     isSolo: true
-                    roles: [ "manager" ]
+                    roles: [ "compute-Manager" ]
                     recipeUrl: "{$.cookbooks_url}"
                     runList: [ "recipe[cloudera::clusters_init]", "recipe[cloudera::hadoop_services_start]" ]
                     jattrs:
@@ -201,7 +183,7 @@ application:
                       cloudera:
                         services: [ "hdfs" ]
                         manager:
-                          host: "{$.props.vms.Node_Manager_DNS}"
+                          host: "{$.signals.vms.*.Node_Manager_DNS[0]}"
                         hadoop:
                           version: "{$.cloudera_hadoop_version}"
                         clusters:
@@ -209,18 +191,20 @@ application:
                             services:
                               zookeeper:
                                 server:
-                                  hosts: [ "{$.props.vms.Node_Master[0]}", "{$.props.vms.Node_Manager[0]}", "{$.props.vms.DataNodes[0]}" ]
+                                  hosts: [ "{$.signals.compute-Manager.*.networks.public.ip[0]}", "{$.signals.compute-Master.*.networks.public.ip[0]}", "{$.signals.compute-DataNodes.*.networks.public.ip[0]}" ]
+                                  config:
+                                    zk_server_log_dir: "/opt/log/zookeeper"
                               hdfs:
                                 namenode:
-                                  hosts: "{$.props.vms.Node_Master}"
+                                  hosts: "{$.signals.compute-Master.*.networks.public.ip}"
                                   config:
                                     dfs_name_dir_list: "/srv/dfs/nn"
                                 secondarynamenode:
-                                  hosts: "{$.props.vms.Node_Manager}"
+                                  hosts: "{$.signals.compute-Manager.*.networks.public.ip}"
                                   config:
                                     fs_checkpoint_dir_list: "/srv/dfs/snn"
                                 datanode:
-                                  hosts: "{$.props.vms.DataNodes}"
+                                  hosts: "{$.signals.compute-DataNodes.*.networks.public.ip}" 
                                   config:
                                     log_threshold: "WARN"
                                     dfs_data_dir_list: "/srv/dfs/dn"
@@ -232,9 +216,9 @@ application:
                                                                     </property>
                               mapreduce:
                                 jobtracker:
-                                  hosts: "{$.props.vms.Node_Manager}"
+                                  hosts: "{$.signals.compute-Manager.*.networks.public.ip}"
                                 tasktracker:
-                                  hosts: "{$.props.vms.DataNodes}"
+                                  hosts: "{$.signals.compute-DataNodes.*.networks.public.ip}" 
                                   config:
                                     mapred_tasktracker_map_tasks_maximum: 6
                                     mapred_tasktracker_reduce_tasks_maximum: 4
@@ -244,7 +228,7 @@ application:
                   precedingPhases: [ provision-hadoop ]
                   parameters:
                     isSudo: true
-                    roles: [ "master" ]
+                    roles: [ "compute-Master" ]
                     command:
                         - bash
                         - '-c'
@@ -263,7 +247,7 @@ application:
                   parameters:
                     isSudo: true
                     isSolo: true
-                    roles: [ "manager" ]
+                    roles: [ "compute-Manager" ]
                     recipeUrl: "{$.cookbooks_url}"
                     runList: [ "recipe[cloudera::hadoop_services_start]" ]
                     jattrs:
@@ -272,7 +256,7 @@ application:
                       cloudera:
                         services: [ "zookeeper", "mapreduce" ]
                         manager:
-                          host: "{$.props.vms.Node_Manager_DNS}"
+                          host: "{$.signals.vms.*.Node_Manager_DNS[0]}"
                         repository_url: "{$.repository_url}"
                         hadoop:
                           version: "{$.cloudera_hadoop_version}"
@@ -282,50 +266,50 @@ application:
                   parameters:
                     isSudo: true
                     isSolo: true
-                    roles: [ "manager" ]
+                    roles: [ "compute-Manager" ]
                     recipeUrl: "{$.cookbooks_url}"
                     runList: [ "recipe[cloudera::hbase]" ]
                     retryCount: 2
                     jattrs:
                       cloudera:
                         master:
-                          host: "{$.props.vms.Node_Master_DNS}"
+                          host: "{$.signals.vms.*.Node_Master_DNS[0]}"
                         manager:
-                          host: "{$.props.vms.Node_Manager_DNS}"
+                          host: "{$.signals.vms.*.Node_Manager_DNS[0]}"
                           version: "{$.cloudera_manager_version}"
                         datanodes:
-                          hosts: "{$.props.vms.DataNodes}"
+                          hosts: "{$.signals.compute-DataNodes.*.networks.public.ip}" 
                         hadoop:
                           version: "{$.cloudera_hadoop_version}"
                         repository_url: "{$.repository_url}"
             return:
               - NameNode:
                   description: "Name Node for HA if available"
-                  value: "{$.props.vms.Node_Master}"
+                  value: "{$.signals.compute-Master.*.networks.public.ip}"
               - Primary_NameNode:
                   description: "Primary NameNode"
-                  value: "{$.props.vms.Node_Master}"
+                  value: "{$.signals.compute-Master.*.networks.public.ip}"
               - Secondary_NameNode:
                   description: "Secondary NameNode"
-                  value: "{$.props.vms.Node_Manager}"
+                  value: "{$.signals.compute-Manager.*.networks.public.ip}"
               - Hbase_Master:
                   description: "Hbase node"
-                  value: "{$.props.vms.Node_Manager}"
+                  value: "{$.signals.compute-Manager.*.networks.public.ip}"
               - Hbase_MasterDns:
                   description: "Hbase Master Dns Name"
-                  value: "{$.props.vms.Node_Manager_DNS}"
+                  value: "{$.signals.vms.*.Node_Manager_DNS[0]}"
               - JobTracker:
                   description: "Job Tracker node"
-                  value: "{$.props.vms.Node_Manager}"
+                  value: "{$.signals.compute-Manager.*.networks.public.ip}"
               - cloudera_hdfsWebui:
                   description: "Namenode (HDFS)"
-                  value: "http://{$.props.vms.Node_Master}:50070"
+                  value: "{$.signals.compute-Master.*.networks.public.ip}:50070"
               - cloudera_jobtrackerWebui:
                   description: "Job Tracker (MapReduce)"
-                  value: "http://{$.props.vms.Node_Manager}:50030"
+                  value: "{$.signals.compute-Manager.*.networks.public.ip}:50030"
               - cloudera_hbaseWebui:
                   description: "Master (HBase)"
-                  value: "http://{$.props.vms.Node_Master}:60010"
+                  value: "{$.signals.compute-Master.*.networks.public.ip}:60010"
           upload-data:
             steps:
               - get-env-props:
@@ -337,7 +321,7 @@ application:
                   precedingPhases: [ get-env-props ]
                   parameters:
                     isSudo: true
-                    roles: [ "master" ]
+                    roles: [ "compute-Master" ]
                     command:
                         - |
                            TDIR=`openssl rand -hex 10`
@@ -357,7 +341,7 @@ application:
                   value: "{$.hdfs-path['*'][0]}"
               - data-url:
                   description: View online
-                  value: "http://{$.props.vms.Node_Master_DNS}:50070/explorer.html#{$.hdfs-path['*'][0]}"
+                  value: "http://{$.props.vms.*.Node_Master_DNS[0]}:50070/explorer.html#{$.hdfs-path['*'][0]}"
 
           cleanup-data:
             steps:
@@ -370,6 +354,6 @@ application:
                   precedingPhases: [ get-env-props ]
                   parameters:
                     isSudo: true
-                    roles: [ "master" ]
+                    roles: [ "compute-Master" ]
                     command:
                         - hadoop fs -rm -f -r "{$.data-dir}" &>/dev/null

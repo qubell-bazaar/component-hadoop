@@ -1,6 +1,6 @@
 kit:
   name: "Cloudera Hadoop"
-  link: https://github.com/qubell-bazaar/component-hadoop
+  link: https://github.com/loky9000/component-hadoop
   applications:
     - name: "CharacterCount"
       manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.1-37p/sample-app.yml"

@@ -1,34 +1,45 @@
 application:
   configuration:
-    input.ami: "us-east-1/ami-ee698586"
-    #input.ami: "us-west-1/ami-0e073d4b"
-    input.identity: "root"
-    input.master_hardware: "m3.large"
-    input.datanode_hardware: "m3.large"
-    input.datanodes_quantity: "5"
-    input.cluster_prefix: "CDH"
-    input.cookbooks_url: "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-0becb57.tar.gz"
-    input.repository_url: "http://archive.cloudera.com"
-    input.cloudera_hadoop_version: "5.1.3"
-    input.cloudera_manager_version: "5.1.3"
-    input.cloudera_search_version: "1.3.0"
-    input.cloudera_impala_version: "1.4.0"
-    input.metastore_root_password: "hive"
+    ##configuration.ami: "us-west-1/ami-0e073d4b"
+    configuration.datanodes_quantity: 5
+    configuration.cluster_prefix: "CDH"
+    configuration.cookbooks_url: "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-e1a893c.tar.gz"
+    configuration.repository_url: "http://archive.cloudera.com"
+    configuration.cloudera_hadoop_version: "5.1.3"
+    configuration.cloudera_manager_version: "5.1.3"
+    configuration.cloudera_search_version: "1.3.0"
+    configuration.cloudera_impala_version: "1.4.0"
+    configuration.metastore_root_password: "hive"
+    compute-config.hardwareId: "m3.large"
+    compute-config.imageId:    "ami-ee698586"
+    compute-config.login:      "root"
+    compute-config.locationId: "us-east-1"
+    compute-datanode-config.hardwareId: "m3.large"
+    compute-datanode-config.imageId:    "ami-ee698586"
+    compute-datanode-config.login:      "root"
+    compute-datanode-config.locationId: "us-east-1"
+    
   interfaces:
-    input:
-      ami: "bind(vms#input.ami)"
-      identity: "bind(vms#input.identity, cloudera-manager#input.identity, cloudera-hadoop#input.identity, cloudera-hive#input.identity, cloudera-oozie#input.identity, cloudera-impala#input.identity, cloudera-sqoop#input.identity, cloudera-flume#input.identity, cloudera-pig#input.identity, cloudera-solr#input.identity, cloudera-hue#input.identity)"
-      master_hardware: "bind(vms#input.master_hardware)"
-      datanode_hardware: "bind(vms#input.datanode_hardware)"
-      datanodes_quantity: "bind(vms#input.datanodes_quantity)"
+    configuration:
+      datanodes_quantity: "bind(cluster#configuration.quantity)"
       cluster_prefix: "bind(vms#input.cluster_prefix)"
-      cookbooks_url: "bind(vms#input.cookbooks_url, cloudera-manager#input.cookbooks_url, cloudera-hadoop#input.cookbooks_url, cloudera-hive#input.cookbooks_url, cloudera-oozie#input.cookbooks_url, cloudera-impala#input.cookbooks_url, cloudera-sqoop#input.cookbooks_url, cloudera-flume#input.cookbooks_url, cloudera-pig#input.cookbooks_url, cloudera-solr#input.cookbooks_url, cloudera-hue#input.cookbooks_url)"
-      repository_url: "bind(cloudera-manager#input.repository_url, cloudera-hadoop#input.repository_url, cloudera-hive#input.repository_url, cloudera-oozie#input.repository_url, cloudera-impala#input.repository_url, cloudera-sqoop#input.repository_url, cloudera-flume#input.repository_url, cloudera-pig#input.repository_url, cloudera-solr#input.repository_url, cloudera-hue#input.repository_url)"
-      cloudera_manager_version: "bind(cloudera-manager#input.cloudera_manager_version, cloudera-hadoop#input.cloudera_manager_version, cloudera-hive#input.cloudera_manager_version, cloudera-oozie#input.cloudera_manager_version, cloudera-impala#input.cloudera_manager_version, cloudera-sqoop#input.cloudera_manager_version, cloudera-solr#input.cloudera_manager_version, cloudera-hue#input.cloudera_manager_version)"
-      cloudera_hadoop_version: "bind(cloudera-hadoop#input.cloudera_hadoop_version,cloudera-hive#input.cloudera_hadoop_version, cloudera-oozie#input.cloudera_hadoop_version, cloudera-impala#input.cloudera_hadoop_version, cloudera-sqoop#input.cloudera_hadoop_version, cloudera-flume#input.cloudera_hadoop_version, cloudera-pig#input.cloudera_hadoop_version, cloudera-solr#input.cloudera_hadoop_version, cloudera-hue#input.cloudera_hadoop_version)"
-      metastore_root_password: "bind(cloudera-hive#input.metastore_root_password)"
-      cloudera_impala_version: "bind(cloudera-impala#input.cloudera_impala_version)"
-      cloudera_search_version: "bind(cloudera-solr#input.cloudera_search_version)"
+      cookbooks_url: "bind(vms#input.cookbooks_url, cloudera-manager#configuration.cookbooks_url, cloudera-hadoop#configuration.cookbooks_url, cloudera-hive#configuration.cookbooks_url, cloudera-oozie#configuration.cookbooks_url, cloudera-impala#configuration.cookbooks_url, cloudera-sqoop#configuration.cookbooks_url, cloudera-flume#configuration.cookbooks_url, cloudera-pig#configuration.cookbooks_url, cloudera-solr#configuration.cookbooks_url, cloudera-hue#configuration.cookbooks_url)"
+      repository_url: "bind(cloudera-manager#configuration.repository_url, cloudera-hadoop#configuration.repository_url, cloudera-hive#configuration.repository_url, cloudera-oozie#configuration.repository_url, cloudera-impala#configuration.repository_url, cloudera-sqoop#configuration.repository_url, cloudera-flume#configuration.repository_url, cloudera-pig#configuration.repository_url, cloudera-solr#configuration.repository_url, cloudera-hue#configuration.repository_url)"
+      cloudera_manager_version: "bind(cloudera-manager#configuration.cloudera_manager_version, cloudera-hadoop#configuration.cloudera_manager_version, cloudera-hive#configuration.cloudera_manager_version, cloudera-oozie#configuration.cloudera_manager_version, cloudera-impala#configuration.cloudera_manager_version, cloudera-sqoop#configuration.cloudera_manager_version, cloudera-solr#configuration.cloudera_manager_version, cloudera-hue#configuration.cloudera_manager_version)"
+      cloudera_hadoop_version: "bind(cloudera-hadoop#configuration.cloudera_hadoop_version,cloudera-hive#configuration.cloudera_hadoop_version, cloudera-oozie#configuration.cloudera_hadoop_version, cloudera-impala#configuration.cloudera_hadoop_version, cloudera-sqoop#configuration.cloudera_hadoop_version, cloudera-flume#configuration.cloudera_hadoop_version, cloudera-pig#configuration.cloudera_hadoop_version, cloudera-solr#configuration.cloudera_hadoop_version, cloudera-hue#configuration.cloudera_hadoop_version)"
+      metastore_root_password: "bind(cloudera-hive#configuration.metastore_root_password)"
+      cloudera_impala_version: "bind(cloudera-impala#configuration.cloudera_impala_version)"
+      cloudera_search_version: "bind(cloudera-solr#configuration.cloudera_search_version)"
+    compute-config:
+      hardwareId: "bind(compute-Master#configuration.hardwareId, compute-Manager#configuration.hardwareId)"
+      imageId:    "bind(compute-Master#configuration.imageId, compute-Manager#configuration.imageId)"
+      login:      "bind(compute-Master#configuration.login, compute-Manager#configuration.login)"
+      locationId: "bind(compute-Master#configuration.locationId, compute-Manager#configuration.locationId)"
+    compute-datanode-config:
+      hardwareId: "bind(cluster.compute-DataNodes#configuration.hardwareId)"
+      imageId:    "bind(cluster.compute-DataNodes#configuration.imageId)"
+      login:      "bind(cluster.compute-DataNodes#configuration.login)"
+      locationId: "bind(cluster.compute-DataNodes#configuration.locationId)"
     Cloudera:
       application-pic: "bind(metadata#output.application-pic)"
       manager: "bind(cloudera-manager#cloudera-manager.Manager_URL)"
@@ -40,6 +51,30 @@ application:
       cleanup-data: "bind(cloudera-hadoop#cloudera-hadoop.cleanup-data)"
       run-workflow: "bind(cloudera-oozie#cloudera-oozie.run-workflow)"
   bindings:
+    - [vms#compute-Master, compute-Master]
+    - [vms#compute-Manager, compute-Manager]
+    - [vms#compute-DataNodes, cluster.compute-DataNodes]
+    - [compute-Master, cloudera-manager#compute-Master]
+    - [compute-Master, cloudera-solr#compute-Master]
+    - [compute-Master, cloudera-flume#compute-Master]
+    - [compute-Master, cloudera-sqoop#compute-Master]
+    - [compute-Master, cloudera-impala#compute-Master]
+    - [compute-Master, cloudera-hadoop#compute-Master]
+    - [compute-Manager, cloudera-manager#compute-Manager]
+    - [compute-Manager, cloudera-hue#compute-Manager]
+    - [compute-Manager, cloudera-solr#compute-Manager]
+    - [compute-Manager, cloudera-pig#compute-Manager]
+    - [compute-Manager, cloudera-flume#compute-Manager]
+    - [compute-Manager, cloudera-impala#compute-Manager]
+    - [compute-Manager, cloudera-hive#compute-Manager]
+    - [compute-Manager, cloudera-hadoop#compute-Manager]
+    - [compute-Manager, cloudera-oozie#compute-Manager]
+    - [cluster.compute-DataNodes, cloudera-hadoop#compute-DataNodes]
+    - [cluster.compute-DataNodes, cloudera-manager#compute-DataNodes]
+    - [cluster.compute-DataNodes, cloudera-solr#compute-DataNodes]
+    - [cluster.compute-DataNodes, cloudera-flume#compute-DataNodes]
+    - [cluster.compute-DataNodes, cloudera-impala#compute-DataNodes]
+    - [cluster.compute-DataNodes, cloudera-hive#compute-DataNodes]
     - [vms, cloudera-manager]
     - [vms, cloudera-hadoop]
     - [vms, cloudera-hive]
@@ -59,6 +94,7 @@ application:
     - [cloudera-pig, cloudera-flume]
     - [cloudera-solr, cloudera-pig]
     - [cloudera-hue, cloudera-solr]
+    - [monitoring, compute-Manager]
     - [monitoring, vms]
     - [monitoring, cloudera-manager]
     - [monitoring, cloudera-hue]
@@ -82,12 +118,14 @@ application:
       interfaces:
         cloudera-hue:
           hue_url: consume-signal(list<string>)
+        compute-Manager:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
         vms:
-          Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
-          Node_Master: consume-signal(list<string>)
           Node_Master_DNS: consume-signal(string)
-          DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
         cloudera-manager:
           Manager_URL: consume-signal(string)
@@ -107,17 +145,17 @@ application:
               - getSignals:
                   action: getSignals
                   output:
-                    env: result
+                    signals: result
               - getCpu:
                   action: restcall
                   precedingPhases: [ getSignals ]
                   parameters:
-                    command: "http://{$.env.vms.Node_Manager[0]}:7180/api/v4/timeseries?query=select+cpu_percent_across_hosts+where+category+%3D+CLUSTER"
+                    command: "http://{$.signals.compute-Manager.networks.public.ip}:7180/api/v4/timeseries?query=select+cpu_percent_across_hosts+where+category+%3D+CLUSTER"
                     method: GET
                     auth:
                       type: basic
-                      user: "{$.env.cloudera-manager.Login}"
-                      password: "{$.env.cloudera-manager.Password}"
+                      user: "{$.signals.cloudera-manager.Login}"
+                      password: "{$.signals.cloudera-manager.Password}"
                     contentType: application/json
                   output:
                     cpu: content
@@ -127,97 +165,101 @@ application:
                 value: "{$.cpu}"
           update: *launch
 
+    compute-Master:
+      type: compute.Instance
+    compute-Manager:
+      type: compute.Instance
+    cluster:
+      type: composite.Scaler
+      components:
+        compute-DataNodes:
+          type: compute.Instance
+
     vms:
       type: workflow.Instance
       interfaces:
         input:
-          ami:
-            type: configuration(string)
-            name: EC2 image
-          identity:
-            type: configuration(string)
-            name: EC2 image username
           #  type: configuration(map<string,object>)
           #  suggestions:
           #    east: {image: "us-east-1/ami-ee698586", identity: "root"}
           #    west: {image: "us-west-1/ami-0e073d4b", identity: "root"}
-          master_hardware:
-            type: configuration(string)
-            name: Master node hardware type
-          datanode_hardware:
-            type: configuration(string)
-            name: Data nodes hardware type
-          datanodes_quantity:
-            type: configuration(string)
-            name: No. of data nodes
           cluster_prefix:
             type: configuration(string)
             name: EC2 node name prefix
           cookbooks_url:
             type: configuration(string)
             name: Chef cookbooks
+        compute-Master:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-Manager:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-DataNodes:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
         result:
-          Node_Manager:
-            type: publish-signal(list<string>)
-            name: Manager node
           Node_Manager_DNS:
             type: publish-signal(string)
             name: Manager node DNS
-          Node_Master:
-            type: publish-signal(list<string>)
-            name: Master node
           Node_Master_DNS:
             type: publish-signal(string)
             name: Master node DNS
-          DataNodes:
-            type: publish-signal(list<string>)
-            name: Data nodes
           DataNodesDNS:
             type: publish-signal(list<string>)
             name: Data nodes DNS
-      required: []
+          DataNodes:
+            type: publish-signal(list<string>)
+            name: Data nodes
+      required: [ compute-Master, compute-Manager, compute-DataNodes ]
       configuration:
         configuration.triggers: {}
         configuration.workflows:
           launch:
             steps:
-              - get_env_props:
-                  action: getEnvironmentProperties
-                  phase: get-env-props
+              - waitPeers:
+                   action: waitPeers
+                   parameters:
+                     interfaces:
+                       compute-DataNodes: 5
+                     timeout:
+                       10 minute
+              - get-signals:
+                  action: getSignals
+                  precedingPhases: [ waitPeers ]
+                  parameters:
+                    multi: true
                   output:
-                    config: result
+                    signals: result
               - provision-hadoop-manager:
                   action: .provision-node
                   phase: provision-node
-                  precedingPhases: [ get-env-props ]
+                  precedingPhases: [ get-signals ]
                   parameters:
-                      roleName: "manager"
-                      hardwareId: "{$.master_hardware}"
-                      quantity: 1
+                      roleName: "compute-Manager"
                   output:
-                      managerIp: ips
                       managerDns: dns
               - provision-hadoop-master:
                   action: .provision-node
                   phase: provision-node
-                  precedingPhases: [ get-env-props ]
+                  precedingPhases: [ get-signals ]
                   parameters:
-                      roleName: "master"
-                      hardwareId: "{$.master_hardware}"
-                      quantity: 1
+                      roleName: "compute-Master"
                   output:
-                      masterIp: ips
                       masterDns: dns
               - provision-datanode:
                   action: .provision-node
                   phase: provision-node
-                  precedingPhases: [ get-env-props ]
+                  precedingPhases: [ get-signals ]
                   parameters:
-                      roleName: "datanode"
-                      hardwareId: "{$.datanode_hardware}"
-                      quantity: "{$.datanodes_quantity}"
+                      roleName: "compute-DataNodes"
                   output:
-                      datanodeIps: ips
                       datanodeDns: dns
               - update-hosts:
                   action: chefrun
@@ -226,50 +268,29 @@ application:
                   parameters:
                       isSudo: true
                       isSolo: true
-                      roles: [ "datanode", "manager", "master" ]
+                      roles: [ "compute-DataNodes", "compute-Manager", "compute-Master" ]
                       recipeUrl: "{$.cookbooks_url}"
                       runList: [ "recipe[cloudera::hosts_aws]" ]
                       jattrs:
                           base:
                               hosts_aws: [ "{$.masterDns[*]}", "{$.managerDns[*]}", "{$.datanodeDns[*]}" ]
             return:
-              - Node_Manager:
-                  value: "{$.managerIp}"
               - Node_Manager_DNS:
                   value: "{$.managerDns[*][0]}"
-              - Node_Master:
-                  value: "{$.masterIp}"
               - Node_Master_DNS:
                   value: "{$.masterDns[*][0]}"
-              - DataNodes:
-                  value: "{$.datanodeIps}"
               - DataNodesDNS:
                   value: "{$.datanodeDns[*]}"
+              - DataNodes:
+                  value: "{$.signals.compute-DataNodes.*.networks.public.ip}"
 
           .provision-node:
               parameters:
                 - roleName:
                     description: Role for the provisioned node
-                - hardwareId:
-                    description: Hardware id
-                - quantity:
-                    description: Number of nodes to start
               steps:
-                - provision-node:
-                    action: provisionAmazonVm
-                    phase: provision
-                    parameters:
-                      roleName: "{$.roleName}"
-                      imageId: "{$.ami}"
-                      vmIdentity: "{$.identity}"
-                      hardwareId: "{$.hardwareId}"
-                      quantity: "{$.quantity}"
-                      jcloudsNodeNamePrefix: "{$.cluster_prefix}"
-                    output:
-                      PublicIPs: ips
                 - link-folders:
                     action: execrun
-                    precedingPhases: [ provision ]
                     parameters:
                       isSudo: true
                       roles: [ "{$.roleName}" ]
@@ -284,10 +305,8 @@ application:
                                 mkdir -p /opt/tmp/debug &&
                                 chmod -R 777 /opt/srv &&
                                 chmod -R 777 /opt/tmp &&
-                                chmod -R 777 /opt/log &&
                                 mount --bind /opt/tmp /tmp &&
                                 mount --bind /opt/srv /srv &&
-                                mount --bind /opt/log /var/log &&
                                 ln -s /opt/tmp/debug /usr/lib/debug
                 - set-hostname:
                     action: execrun
@@ -365,20 +384,15 @@ application:
                           - |
                                 /etc/init.d/iptables stop
               return:
-                ips:
-                  value: "{$.PublicIPs}"
                 dns:
                   value: "{$.dns}"
     cloudera-manager:
       type: reference.Submodule
       configuration:
         __locator.application-id: "Cloudera Manager"
-      required: [vms]
+      required: [vms, compute-Manager, compute-Master, compute-DataNodes]
       interfaces:
-        input:
-          identity:
-            type: configuration(string)
-            name: EC2 image username
+        configuration:
           cookbooks_url:
             type: configuration(string)
             name: Chef cookbooks
@@ -388,12 +402,24 @@ application:
           cloudera_manager_version:
             type: configuration(string)
             name: Cloudera Manager version
+        compute-Master:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-Manager:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-DataNodes:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
         vms:
-          Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
-          Node_Master: consume-signal(list<string>)
           Node_Master_DNS: consume-signal(string)
-          DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
         cloudera-manager:
           Manager_URL:
@@ -409,12 +435,9 @@ application:
       type: reference.Submodule
       configuration:
         __locator.application-id: "Cloudera Hadoop"
-      required: [vms, cloudera-manager]
+      required: [vms, cloudera-manager, compute-Manager, compute-Master, compute-DataNodes]
       interfaces:
-        input:
-          identity:
-            type: configuration(string)
-            name: EC2 image username
+        configuration:
           repository_url:
             type: configuration(string)
             name: Cloudera RPM repository
@@ -427,12 +450,24 @@ application:
           cloudera_manager_version:
             type: configuration(string)
             name: Cloudera Manager version
+        compute-Master:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-Manager:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-DataNodes:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
         vms:
-          Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
-          Node_Master: consume-signal(list<string>)
           Node_Master_DNS: consume-signal(string)
-          DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
         cloudera-manager:
           Manager_URL: consume-signal(string)
@@ -476,12 +511,9 @@ application:
       type: reference.Submodule
       configuration:
         __locator.application-id: "Cloudera Hive"
-      required: [vms, cloudera-hadoop]
+      required: [vms, cloudera-hadoop, compute-Manager, compute-DataNodes]
       interfaces:
-        input:
-          identity:
-            type: configuration(string)
-            name: EC2 image username
+        configuration:
           repository_url:
             type: configuration(string)
             name: Cloudera RPM repository
@@ -497,12 +529,19 @@ application:
           metastore_root_password:
             type: configuration(string)
             name: MetaStore root password
+        compute-Manager:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-DataNodes:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
         vms:
-          Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
-          Node_Master: consume-signal(list<string>)
           Node_Master_DNS: consume-signal(string)
-          DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
         cloudera-hadoop:
           NameNode: consume-signal(list<string>)
@@ -525,12 +564,9 @@ application:
       type: reference.Submodule
       configuration:
         __locator.application-id: "Cloudera Oozie"
-      required: [vms, cloudera-hive]
+      required: [vms, cloudera-hive, compute-Manager]
       interfaces:
-        input:
-          identity:
-            type: configuration(string)
-            name: EC2 image username
+        configuration:
           repository_url:
             type: configuration(string)
             name: Cloudera RPM repository
@@ -543,12 +579,14 @@ application:
           cloudera_manager_version:
             type: configuration(string)
             name: Cloudera Manager version
+        compute-Manager:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
         vms:
-          Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
-          Node_Master: consume-signal(list<string>)
           Node_Master_DNS: consume-signal(string)
-          DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
         cloudera-hive:
           Hive_Server: consume-signal(list<string>)
@@ -564,12 +602,9 @@ application:
       type: reference.Submodule
       configuration:
         __locator.application-id: "Cloudera Impala"
-      required: [vms, cloudera-oozie]
+      required: [vms, cloudera-oozie, compute-Manager, compute-Master, compute-DataNodes]
       interfaces:
-        input:
-          identity:
-            type: configuration(string)
-            name: EC2 image username
+        configuration:
           repository_url:
             type: configuration(string)
             name: Cloudera RPM repository
@@ -585,12 +620,24 @@ application:
           cloudera_impala_version:
             type: configuration(string)
             name: Cloudera Impala version
+        compute-Master:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-Manager:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-DataNodes:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
         vms:
-          Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
-          Node_Master: consume-signal(list<string>)
           Node_Master_DNS: consume-signal(string)
-          DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
         cloudera-oozie:
           Oozie_Server: consume-signal(list<string>)
@@ -602,12 +649,9 @@ application:
       type: reference.Submodule
       configuration:
         __locator.application-id: "Cloudera Sqoop"
-      required: [vms, cloudera-impala]
+      required: [vms, cloudera-impala, compute-Master]
       interfaces:
-        input:
-          identity:
-            type: configuration(string)
-            name: EC2 image username
+        configuration:
           repository_url:
             type: configuration(string)
             name: Cloudera RPM repository
@@ -620,12 +664,14 @@ application:
           cloudera_manager_version:
             type: configuration(string)
             name: Cloudera Manager version
+        compute-Master:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
         vms:
-          Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
-          Node_Master: consume-signal(list<string>)
           Node_Master_DNS: consume-signal(string)
-          DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
         cloudera-impala:
           Impala_Master: consume-signal(list<string>)
@@ -637,12 +683,9 @@ application:
       type: reference.Submodule
       configuration:
         __locator.application-id: "Cloudera Flume"
-      required: [vms, cloudera-sqoop]
+      required: [vms, cloudera-sqoop, compute-Manager, compute-Master, compute-DataNodes]
       interfaces:
-        input:
-          identity:
-            type: configuration(string)
-            name: EC2 image username
+        configuration:
           repository_url:
             type: configuration(string)
             name: Cloudera RPM repository
@@ -652,12 +695,24 @@ application:
           cloudera_hadoop_version:
             type: configuration(string)
             name: Cloudera Hadoop version
+        compute-Master:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-Manager:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-DataNodes:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
         vms:
-          Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
-          Node_Master: consume-signal(list<string>)
           Node_Master_DNS: consume-signal(string)
-          DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
         cloudera-sqoop:
           Sqoop_Master: consume-signal(list<string>)
@@ -669,12 +724,9 @@ application:
       type: reference.Submodule
       configuration:
        __locator.application-id: "Cloudera Pig"
-      required: [vms, cloudera-flume]
+      required: [vms, cloudera-flume, compute-Manager]
       interfaces:
-        input:
-          identity:
-            type: configuration(string)
-            name: EC2 image username
+        configuration:
           repository_url:
             type: configuration(string)
             name: Cloudera RPM repository
@@ -684,12 +736,14 @@ application:
           cloudera_hadoop_version:
             type: configuration(string)
             name: Cloudera Hadoop version
+        compute-Manager:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
         vms:
-          Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
-          Node_Master: consume-signal(list<string>)
           Node_Master_DNS: consume-signal(string)
-          DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
         cloudera-flume:
           Flume_Status: consume-signal(string)
@@ -701,12 +755,9 @@ application:
       type: reference.Submodule
       configuration:
         __locator.application-id: "Cloudera Solr"
-      required: [vms, cloudera-pig]
+      required: [vms, cloudera-pig, compute-Manager, compute-Master, compute-DataNodes]
       interfaces:
-        input:
-          identity:
-            type: configuration(string)
-            name: EC2 image username
+        configuration:
           repository_url:
             type: configuration(string)
             name: Cloudera RPM repository
@@ -722,12 +773,24 @@ application:
           cloudera_search_version:
             type: configuration(string)
             name: Cloudera Search version
+        compute-Master:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-Manager:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-DataNodes:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
         vms:
-          Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
-          Node_Master: consume-signal(list<string>)
           Node_Master_DNS: consume-signal(string)
-          DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
         cloudera-pig:
           Pig_Status: consume-signal(string)
@@ -739,12 +802,9 @@ application:
       type: reference.Submodule
       configuration:
         __locator.application-id: "Cloudera Hue"
-      required: [vms, cloudera-solr]
+      required: [vms, cloudera-solr, compute-Manager]
       interfaces:
-        input:
-          identity:
-            type: configuration(string)
-            name: EC2 image username
+        configuration:
           repository_url:
             type: configuration(string)
             name: Cloudera RPM repository
@@ -757,12 +817,14 @@ application:
           cloudera_manager_version:
             type: configuration(string)
             name: Cloudera Manager version
+        compute-Manager:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
         vms:
-          Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
-          Node_Master: consume-signal(list<string>)
           Node_Master_DNS: consume-signal(string)
-          DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
         cloudera-solr:
           Solr_Uri: consume-signal(list<string>)
