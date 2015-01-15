@@ -3,7 +3,7 @@ kit:
   link: https://github.com/qubell-bazaar/component-hadoop
   applications:
     - name: "CharacterCount"
-      manifest "https://raw.github.com/qubell-bazaar/component-hadoop/2.0-35p/sample-app.yml"
+      manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.0-35p/sample-app.yml"
     - name: "CDH Main"
       manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.0-36p/component-hadoop.yml"
     - name: "Cloudera Flume"
