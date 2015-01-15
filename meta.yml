@@ -24,6 +24,8 @@ kit:
       manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.0-35p/cloudera-solr.yml"
     - name: "Cloudera Sqoop"
       manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.0-35p/cloudera-sqoop.yml"
+    - name: "Sample Hadoop App"
+      manifest "https://raw.github.com/qubell-bazaar/component-hadoop/2.0-35p/sample-app.yml"
   provider:
     name: "Qubell"
     link: http://qubell.com

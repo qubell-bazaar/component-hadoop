@@ -1,0 +1,103 @@
+application:
+    configuration:
+        input.dataset-url: "https://s3.amazonaws.com/qubell-hadoop-test/input/data.tar.gz"
+        input.workflow-url: "https://s3.amazonaws.com/qubell-hadoop-test/workflow.tar.gz"
+    interfaces:
+        input:
+            dataset-url: bind(workflow#input.dataset-url)
+            workflow-url: bind(workflow#input.workflow-url)
+        output:
+            job-status: bind(workflow#result.job-status)
+            data-url: bind(workflow#result.data-url)
+            application-pic: "bind(metadata#output.application-pic)"
+    bindings:
+        - [ workflow, hadoop ]
+
+    components:
+        metadata:
+            type: cobalt.common.Constants
+            interfaces:
+                output:
+                    application-pic:
+                        type: publish-signal(map<string, object>)
+                        name: ""
+            configuration:
+                configuration.values:
+                    output.application-pic:
+                        large: "https://s3.amazonaws.com/qubell-images/datacloud.png"
+                        small: "https://s3.amazonaws.com/qubell-images/datacloud_small.jpg"
+                        small-height: 45
+
+        hadoop:
+            type: reference.Submodule
+            configuration:
+                __locator.application-id: "CDH Main"
+            interfaces:
+                Cloudera:
+                    upload-data: receive-command(string archive-url => string data-dir, string data-url)
+                    cleanup-data: receive-command(string data-dir)
+                    run-workflow: receive-command(string archive-url, string data-dir => string status)
+                    
+        workflow:
+            type: workflow.Instance
+            interfaces:
+                input:
+                    dataset-url:
+                        type: configuration(string)
+                        name: Data archive
+                    workflow-url:
+                        type: configuration(string)
+                        name: Workflow archive
+                result:
+                    data-url:
+                        type: publish-signal(string)
+                        name: View results
+                    job-status:
+                        type: publish-signal(string)
+                        name: Job result
+                    data-dir:
+                        type: publish-signal(string)
+                        name: Data directory
+                hadoop:
+                    upload-data: send-command(string archive-url => string data-dir, string data-url)
+                    cleanup-data: send-command(string data-dir)
+                    run-workflow: send-command(string archive-url, string data-dir => string status)
+
+            required: [ hadoop ]
+            configuration:
+                configuration.propagateStatus: []
+                configuration.triggers: {}
+                configuration.workflows:
+                    launch:
+                        steps:
+                            - upload-data:
+                                action: hadoop.upload-data
+                                parameters:
+                                    commandCallTimeout: 600
+                                    archive-url: "{$.dataset-url}"
+                                output:
+                                    data-dir: data-dir
+                                    data-url: data-url
+                            - run-workflow:
+                                action: hadoop.run-workflow
+                                precedingPhases: [ upload-data ]
+                                parameters:
+                                    commandCallTimeout: 3600
+                                    archive-url: "{$.workflow-url}"
+                                    data-dir: "{$.data-dir}"
+                                output:
+                                    status: status
+                        return:
+                            data-url:
+                                value: "{$.data-url}"
+                            job-status:
+                                value: "{$.status}"
+                            data-dir:
+                                value: "{$.data-dir}"
+                    destroy:
+                        steps:
+                            - cleanup-data:
+                                action: hadoop.cleanup-data
+                                parameters:
+                                    commandCallTimeout: 600
+                                    data-dir: "{$.data-dir}"
