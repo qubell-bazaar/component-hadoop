@@ -287,7 +287,6 @@ application:
                                 chmod -R 777 /opt/log &&
                                 mount --bind /opt/tmp /tmp &&
                                 mount --bind /opt/srv /srv &&
-                                mount --bind /opt/log /var/log &&
                                 ln -s /opt/tmp/debug /usr/lib/debug
                 - set-hostname:
                     action: execrun

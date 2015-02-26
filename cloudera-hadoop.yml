@@ -210,6 +210,8 @@ application:
                               zookeeper:
                                 server:
                                   hosts: [ "{$.props.vms.Node_Master[0]}", "{$.props.vms.Node_Manager[0]}", "{$.props.vms.DataNodes[0]}" ]
+                                  config:
+                                    zk_server_log_dir: "/opt/log/zookeeper"
                               hdfs:
                                 namenode:
                                   hosts: "{$.props.vms.Node_Master}"
