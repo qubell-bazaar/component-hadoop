@@ -1,25 +1,24 @@
 application:
   configuration:
-    input.identity: "root"
-    input.cookbooks_url: "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-v5.tar.gz"
-    input.repository_url: "http://archive.cloudera.com"
-    input.cloudera_manager_version: "5.1.3"
-    input.cloudera_hadoop_version: "5.1.3"
-    input.metastore_root_password: "hive"
+    configuration.cookbooks_url: "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-v5.tar.gz"
+    configuration.repository_url: "http://archive.cloudera.com"
+    configuration.cloudera_manager_version: "5.1.3"
+    configuration.cloudera_hadoop_version: "5.1.3"
+    configuration.metastore_root_password: "hive"
   interfaces:
-    input:
-      identity: "bind(cloudera-hive#input.identity)"
+    configuration:
       cookbooks_url: "bind(cloudera-hive#input.cookbooks_url)"
       repository_url: "bind(cloudera-hive#input.repository_url)"
       cloudera_manager_version: "bind(cloudera-hive#input.cloudera_manager_version)"
       cloudera_hadoop_version: "bind(cloudera-hive#input.cloudera_hadoop_version)"
       metastore_root_password: "bind(cloudera-hive#input.metastore_root_password)"
+    compute-Manager: 
+      "*": "bind(cloudera-hive#compute-Manager.*)"
+    compute-DataNodes:
+      "*": "bind(cloudera-hive#compute-DataNodes.*)"
     vms:
-      Node_Manager: "bind(cloudera-hive#vms.Node_Manager)"
       Node_Manager_DNS: "bind(cloudera-hive#vms.Node_Manager_DNS)"
-      Node_Master: "bind(cloudera-hive#vms.Node_Master)"
       Node_Master_DNS: "bind(cloudera-hive#vms.Node_Master_DNS)"
-      DataNodes: "bind(cloudera-hive#vms.DataNodes)"
       DataNodesDNS: "bind(cloudera-hive#vms.DataNodesDNS)"
     cloudera-hadoop:
       NameNode: "bind(cloudera-hive#cloudera-hadoop.NameNode)"
@@ -53,9 +52,6 @@ application:
       type: workflow.Instance
       interfaces:
         input:
-          identity:
-            type: configuration(string)
-            name: EC2 image username
           repository_url:
             type: configuration(string)
             name: Cloudera RPM repository
@@ -71,12 +67,19 @@ application:
           metastore_root_password:
             type: configuration(string)
             name: MetaStore root password
+        compute-Manager:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-DataNodes:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
         vms:
-          Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
-          Node_Master: consume-signal(list<string>)
           Node_Master_DNS: consume-signal(string)
-          DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
         cloudera-hadoop:
           NameNode: consume-signal(list<string>)
@@ -95,53 +98,25 @@ application:
           Hive_Metastore:
             type: publish-signal(list<string>)
             name: Hive Metastore server
-      required: [vms, cloudera-hadoop]
+      required: [vms, cloudera-hadoop, compute-Manager, compute-DataNodes]
       configuration:
         configuration.triggers: {}
         configuration.workflows:
           launch:
             steps:
-              - get-env-props:
-                  action: getEnvironmentProperties
-                  output:
-                    props: result
-              - provision-manager-node:
-                  action: provisionVms
-                  precedingPhases: [ get-env-props ]
+              - get-signals:
+                  action: getSignals
                   parameters:
-                    roleName: "manager"
-                    hardwareId: ""
-                    vmIdentity: "{$.identity}"
-                    staticIps: "{$.props.vms.Node_Manager}"
+                    multi: true
                   output:
-                    managerIp: ips
-              - provision-datanode:
-                  action: provisionVms
-                  precedingPhases: [ get-env-props ]
-                  parameters:
-                    roleName: "datanode"
-                    hardwareId: ""
-                    vmIdentity: "{$.identity}"
-                    staticIps: "{$.props.vms.DataNodes}"
-                  output:
-                    datanodeIps: ips
-              - provision-master-node:
-                  action: provisionVms
-                  precedingPhases: [ get-env-props ]
-                  parameters:
-                    roleName: "master"
-                    hardwareId: ""
-                    vmIdentity: "{$.identity}"
-                    staticIps: "{$.props.vms.Node_Master}"
-                  output:
-                    masterIp: ips
+                    signals: result
               - packages-hive:
                   action: chefrun
-                  precedingPhases: [ provision-manager-node, provision-datanode, provision-master-node ]
+                  precedingPhases: [ get-signals ]
                   parameters:
                     isSudo: true
                     isSolo: true
-                    roles: [ "manager" ]
+                    roles: [ "compute-Manager" ]
                     recipeUrl: "{$.cookbooks_url}"
                     runList: [ "recipe[cloudera::hive_rc]" ]
                     retryCount: 2
@@ -150,12 +125,12 @@ application:
                         java_home: "/usr/java/jdk6"
                       cloudera:
                         master:
-                          host: "{$.props.vms.Node_Master_DNS}"
+                          host: "{$.signals.vms.*.Node_Master_DNS[0]}"
                         manager:
-                          host: "{$.props.vms.Node_Manager_DNS}"
+                          host: "{$.signals.vms.*.Node_Manager_DNS[0]}"
                           version: "{$.cloudera_manager_version}"
                         datanodes:
-                          hosts: "{$.props.vms.DataNodesDNS}"
+                          hosts: "{$.signals.vms.*.DataNodesDNS}"
                         hadoop:
                           version: "{$.cloudera_hadoop_version}"
                         repository_url: "{$.repository_url}"
@@ -171,7 +146,7 @@ application:
                   parameters:
                       isSudo: true
                       isSolo: true
-                      roles: [ "master", "datanode" ]
+                      roles: [ "compute-Manager", "compute-DataNodes" ]
                       recipeUrl: "{$.cookbooks_url}"
                       runList: [ "recipe[cloudera::hive_client_pkg]" ]
                       retryCount: 2
@@ -180,9 +155,9 @@ application:
                           java_home: "/usr/java/jdk6"
                         cloudera:
                           master:
-                            host: "{$.props.vms.Node_Master_DNS}"
+                            host: "{$.signals.vms.*.Node_Master_DNS[0]}"
                           manager:
-                            host: "{$.props.vms.Node_Manager_DNS}"
+                            host: "{$.signals.vms.*.Node_Manager_DNS[0]}"
                             version: "{$.cloudera_manager_version}"
                           hadoop:
                             version: "{$.cloudera_hadoop_version}"
@@ -194,7 +169,7 @@ application:
                   parameters:
                       isSudo: true
                       isSolo: true
-                      roles: [ "manager" ]
+                      roles: [ "compute-Manager" ]
                       recipeUrl: "{$.cookbooks_url}"
                       runList: [ "recipe[cloudera::hive]" ]
                       jattrs:
@@ -202,19 +177,19 @@ application:
                           java_home: "/usr/java/jdk6"
                         cloudera:
                           master:
-                            host: "{$.props.vms.Node_Master_DNS}"
+                            host: "{$.signals.vms.*.Node_Master_DNS[0]}"
                           manager:
-                            host: "{$.props.vms.Node_Manager_DNS}"
+                            host: "{$.signals.vms.*.Node_Manager_DNS[0]}"
                             version: "{$.cloudera_manager_version}"
                           datanodes:
-                            hosts: "{$.props.vms.DataNodes}"
+                            hosts: "{$.signals.compute-DataNodes.*.networks.public.ip}"
                           hadoop:
                             version: "{$.cloudera_hadoop_version}"
                           repository_url: "{$.repository_url}" 
             return:
               - Hive_Server:
                   description: "Hive server node"
-                  value: "{$.props.vms.Node_Manager}"
+                  value: "{$.signals.compute-Manager.*.networks.public.ip}"
               - Hive_Metastore:
                   description: "Hive Metastore node"
-                  value: "{$.props.vms.Node_Manager}"                 
+                  value: "{$.signals.compute-Manager.*.networks.public.ip}"                 

@@ -1,21 +1,22 @@
 application:
   configuration:
-    input.identity: "root"
-    input.cookbooks_url: "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-v5.tar.gz"
-    input.repository_url: "http://archive.cloudera.com"
-    input.cloudera_hadoop_version: "5.1.3"
+    configuration.cookbooks_url: "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-v5.tar.gz"
+    configuration.repository_url: "http://archive.cloudera.com"
+    configuration.cloudera_hadoop_version: "5.1.3"
   interfaces:
-    input:
-      identity: "bind(cloudera-flume#input.identity)"
+    configuration:
       cookbooks_url: "bind(cloudera-flume#input.cookbooks_url)"
       repository_url: "bind(cloudera-flume#input.repository_url)"
       cloudera_hadoop_version: "bind(cloudera-flume#input.cloudera_hadoop_version)"
+    compute-Manager: 
+      "*": "bind(cloudera-flume#compute-Manager.*)"
+    compute-Master:  
+      "*": "bind(cloudera-flume#compute-Master.*)"
+    compute-DataNodes:
+      "*": "bind(cloudera-flume#compute-DataNodes.*)"
     vms:
-      Node_Manager: "bind(cloudera-flume#vms.Node_Manager)"
       Node_Manager_DNS: "bind(cloudera-flume#vms.Node_Manager_DNS)"
-      Node_Master: "bind(cloudera-flume#vms.Node_Master)"
       Node_Master_DNS: "bind(cloudera-flume#vms.Node_Master_DNS)"
-      DataNodes: "bind(cloudera-flume#vms.DataNodes)"
       DataNodesDNS: "bind(cloudera-flume#vms.DataNodesDNS)"
     cloudera-sqoop:
       Sqoop_Master: "bind(cloudera-flume#cloudera-sqoop.Sqoop_Master)"
@@ -40,16 +41,27 @@ application:
       type: workflow.Instance
       interfaces:
         input:
-          identity: configuration(string)
           repository_url: configuration(string)
           cookbooks_url: configuration(string)
           cloudera_hadoop_version: configuration(string)
+        compute-Master:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-Manager:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-DataNodes:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
         vms:
-          Node_Manager: consume-signal(list<string>)
           Node_Manager_DNS: consume-signal(string)
-          Node_Master: consume-signal(list<string>)
           Node_Master_DNS: consume-signal(string)
-          DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
         cloudera-sqoop:
           Sqoop_Master: consume-signal(list<string>)
@@ -57,54 +69,26 @@ application:
           Flume_Status:
             type: publish-signal(string)
             name: Flume status
-      required: [vms, cloudera-sqoop]
+      required: [vms, cloudera-sqoop, compute-Manager, compute-Master, compute-DataNodes]
       configuration:
         configuration.triggers: {}
         configuration.workflows:
           launch:
             steps:
-              - get-env-props:
-                  action: getEnvironmentProperties
-                  output:
-                    props: result
-              - provision-manager-node:
-                  action: provisionVms
-                  precedingPhases: [ get-env-props ]
+              - get-signals:
+                  action: getSignals
                   parameters:
-                    roleName: "manager"
-                    hardwareId: ""
-                    vmIdentity: "{$.identity}"
-                    staticIps: "{$.props.vms.Node_Manager}"
+                    multi: true
                   output:
-                    managerIp: ips
-              - provision-datanode:
-                  action: provisionVms
-                  precedingPhases: [ get-env-props ]
-                  parameters:
-                    roleName: "datanode"
-                    hardwareId: ""
-                    vmIdentity: "{$.identity}"
-                    staticIps: "{$.props.vms.DataNodes}"
-                  output:
-                    datanodeIps: ips
-              - provision-master-node:
-                  action: provisionVms
-                  precedingPhases: [ get-env-props ]
-                  parameters:
-                    roleName: "master"
-                    hardwareId: ""
-                    vmIdentity: "{$.identity}"
-                    staticIps: "{$.props.vms.Node_Master}"
-                  output:
-                    masterIp: ips
+                    signals: result
               - install-flume-pkg:
                   action: chefrun
                   phase: install-flume-pkg
-                  precedingPhases: [ provision-manager-node, provision-datanode, provision-master-node ]
+                  precedingPhases: [ get-signals ]
                   parameters:
                     isSudo: true
                     isSolo: true
-                    roles: [ "master", "manager", "datanode" ]
+                    roles: [ "compute-Master", "compute-Manager", "compute-DataNodes" ]
                     recipeUrl: "{$.cookbooks_url}"
                     runList: [ "recipe[cloudera::flume_pkg]" ]
                     retryCount: 2

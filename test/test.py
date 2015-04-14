@@ -19,10 +19,11 @@ from qubell.api.testing import *
 class ClouderaHadoopComponentTestCase(BaseComponentTestCase):
     name = "CDH Main"
     #meta = os.path.realpath(os.path.join(os.path.dirname(__file__), '../meta.yml'))
+    destroy_interval = int(os.environ.get('DESTROY_INTERVAL', 1000*60*60*2))
     apps = [
        {"name": name,
         "file": os.path.realpath(os.path.join(os.path.dirname(__file__), '../component-hadoop.yml')),
-        "settings": {"destroyInterval": 14400000}},
+        "settings": {"destroyInterval": destroy_interval}},
        {"name": "Cloudera Flume",
         "file": os.path.realpath(os.path.join(os.path.dirname(__file__), '../cloudera-flume.yml')),
         "launch": False},
