@@ -234,7 +234,7 @@ application:
                                                                     </property>
                               mapreduce:
                                 jobtracker:
-                                  hosts: "{$.props.vms.Node_Manager}"
+                                  hosts: "{$.props.vms.Node_Master}"
                                 tasktracker:
                                   hosts: "{$.props.vms.DataNodes}"
                                   config:
