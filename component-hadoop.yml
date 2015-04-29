@@ -3,7 +3,7 @@ application:
     input.ami: "us-east-1/ami-ee698586"
     #input.ami: "us-west-1/ami-0e073d4b"
     input.identity: "root"
-    input.master_hardware: "m3.large"
+    input.manager_hardware: "m3.xlarge"
     input.datanode_hardware: "m3.large"
     input.datanodes_quantity: "5"
     input.cluster_prefix: "CDH"
@@ -18,7 +18,7 @@ application:
     input:
       ami: "bind(vms#input.ami)"
       identity: "bind(vms#input.identity, cloudera-manager#input.identity, cloudera-hadoop#input.identity, cloudera-hive#input.identity, cloudera-oozie#input.identity, cloudera-impala#input.identity, cloudera-sqoop#input.identity, cloudera-flume#input.identity, cloudera-pig#input.identity, cloudera-solr#input.identity, cloudera-hue#input.identity)"
-      master_hardware: "bind(vms#input.master_hardware)"
+      manager_hardware: "bind(vms#input.manager_hardware)"
       datanode_hardware: "bind(vms#input.datanode_hardware)"
       datanodes_quantity: "bind(vms#input.datanodes_quantity)"
       cluster_prefix: "bind(vms#input.cluster_prefix)"
@@ -141,9 +141,9 @@ application:
           #  suggestions:
           #    east: {image: "us-east-1/ami-ee698586", identity: "root"}
           #    west: {image: "us-west-1/ami-0e073d4b", identity: "root"}
-          master_hardware:
+          manager_hardware:
             type: configuration(string)
-            name: Master node hardware type
+            name: Manager node hardware type
           datanode_hardware:
             type: configuration(string)
             name: Data nodes hardware type
@@ -192,7 +192,7 @@ application:
                   precedingPhases: [ get-env-props ]
                   parameters:
                       roleName: "manager"
-                      hardwareId: "{$.master_hardware}"
+                      hardwareId: "{$.manager_hardware}"
                       quantity: 1
                   output:
                       managerIp: ips
@@ -203,7 +203,7 @@ application:
                   precedingPhases: [ get-env-props ]
                   parameters:
                       roleName: "master"
-                      hardwareId: "{$.master_hardware}"
+                      hardwareId: "{$.datanode_hardware}"
                       quantity: 1
                   output:
                       masterIp: ips
