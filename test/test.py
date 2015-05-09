@@ -59,6 +59,14 @@ class ClouderaHadoopComponentTestCase(BaseComponentTestCase):
        "file": os.path.realpath(os.path.join(os.path.dirname(__file__), '../cloudera-solr.yml')),
        "launch": False
        },
+       {"name": "Cloudera Yarn",
+       "file": os.path.realpath(os.path.join(os.path.dirname(__file__), '../cloudera-yarn.yml')),
+       "launch": False
+       },
+       {"name": "Cloudera Spark",
+       "file": os.path.realpath(os.path.join(os.path.dirname(__file__), '../cloudera-spark.yml')),
+       "launch": False
+       },
        {"name": "Cloudera Sqoop",
        "file": os.path.realpath(os.path.join(os.path.dirname(__file__), '../cloudera-sqoop.yml')),
        "launch": False

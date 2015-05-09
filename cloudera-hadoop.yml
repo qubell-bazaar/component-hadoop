@@ -239,7 +239,12 @@ application:
                           su hdfs -c "hadoop fs -chown hbase:hbase /hbase";
                           su hdfs -c "hadoop fs -mkdir /user";
                           su hdfs -c "hadoop fs -mkdir /user/mapred";
+                          su hdfs -c "hadoop fs -mkdir /user/spark";
+                          su hdfs -c "hadoop fs -mkdir /user/spark/applicationHistory";
                           su hdfs -c "hadoop fs -chown mapred:mapred /user/mapred";
+                          su hdfs -c "hadoop fs -chown spark:spark /user/spark";
+                          su hdfs -c "hadoop fs -chown spark:spark /user/spark/applicationHistory";
+                          
 
               - start-hadoop:
                   action: chefrun
