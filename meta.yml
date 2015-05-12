@@ -24,6 +24,10 @@ kit:
       manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.3-40p/cloudera-pig.yml"
     - name: "Cloudera Solr"
       manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.3-40p/cloudera-solr.yml"
+    - name: "Cloudera Yarn"
+      manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.3-40p/cloudera-yarn.yml"
+    - name: "Cloudera Yarn"
+      manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.3-40p/cloudera-spark.yml"
     - name: "Cloudera Sqoop"
       manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.3-40p/cloudera-sqoop.yml"
   provider:

@@ -1,0 +1,134 @@
+application:
+  configuration:
+    input.identity: "root"
+    input.cookbooks_url: "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-v5.tar.gz"
+    input.repository_url: "http://arcyarn.cloudera.com"
+    input.cloudera_manager_version: "5.1.3"
+    input.cloudera_hadoop_version: "5.1.3"
+  interfaces:
+    input:
+      identity: "bind(cloudera-yarn#input.identity)"
+      cookbooks_url: "bind(cloudera-yarn#input.cookbooks_url)"
+      repository_url: "bind(cloudera-yarn#input.repository_url)"
+      cloudera_manager_version: "bind(cloudera-yarn#input.cloudera_manager_version)"
+      cloudera_hadoop_version: "bind(cloudera-yarn#input.cloudera_hadoop_version)"
+    vms:
+      Node_Manager: "bind(cloudera-yarn#vms.Node_Manager)"
+      Node_Manager_DNS: "bind(cloudera-yarn#vms.Node_Manager_DNS)"
+      Node_Master: "bind(cloudera-yarn#vms.Node_Master)"
+      Node_Master_DNS: "bind(cloudera-yarn#vms.Node_Master_DNS)"
+      DataNodes: "bind(cloudera-yarn#vms.DataNodes)"
+      DataNodesDNS: "bind(cloudera-yarn#vms.DataNodesDNS)"
+    cloudera-hadoop:
+      "*": "bind(cloudera-yarn#cloudera-hadoop.*)"
+    cloudera-yarn:
+      Resource_Manager_Uri: "bind(cloudera-yarn#result.Resource_Manager_Uri)"
+      Job_History_Uri: "bind(cloudera-yarn#result.Job_History_Uri)"
+      application-pic: "bind(metadata#output.application-pic)"
+  components:
+    metadata:
+      type: cobalt.common.Constants
+      interfaces:
+        output:
+          application-pic:
+            type: publish-signal(map<string, object>)
+            name: ""
+      configuration:
+        configuration.values:
+          output.application-pic:
+            large: "https://s3.amazonaws.com/qubell-images/yarn.png"
+            small: "https://s3.amazonaws.com/qubell-images/yarn.png"
+            small-height: 90
+    cloudera-yarn:
+      type: workflow.Instance
+      interfaces:
+        input:
+          identity:
+            type: configuration(string)
+            name: EC2 image username
+          repository_url:
+            type: configuration(string)
+            name: Cloudera RPM repository
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+          cloudera_hadoop_version:
+            type: configuration(string)
+            name: Cloudera Hadoop version
+          cloudera_manager_version:
+            type: configuration(string)
+            name: Cloudera Manager version
+        vms:
+          Node_Manager: consume-signal(list<string>)
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master: consume-signal(list<string>)
+          Node_Master_DNS: consume-signal(string)
+          DataNodes: consume-signal(list<string>)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-hadoop:
+          NameNode: consume-signal(list<string>)
+          Primary_NameNode: consume-signal(list<string>)
+          Secondary_NameNode: consume-signal(list<string>)
+          Hbase_Master: consume-signal(list<string>)
+          Hbase_MasterDns: consume-signal(string)
+          JobTracker: consume-signal(list<string>)
+          cloudera_hdfsWebui: consume-signal(list<string>)
+          cloudera_jobtrackerWebui: consume-signal(list<string>)
+          cloudera_hbaseWebui: consume-signal(list<string>)
+        result:
+          Resource_Manager_Uri:
+            type: publish-signal(string)
+            name: Yarn Resource Manager
+          Job_History_Uri:
+            type: publish-signal(string)
+            name: Yarn Job History
+      required: [vms, cloudera-hadoop]
+      configuration:
+        configuration.triggers: {}
+        configuration.workflows:
+          launch:
+            steps:
+              - get-env-props:
+                  action: getEnvironmentProperties
+                  output:
+                    props: result
+              - provision-master-node:
+                  action: provisionVms
+                  precedingPhases: [ get-env-props ]
+                  parameters:
+                    roleName: "master"
+                    hardwareId: ""
+                    vmIdentity: "{$.identity}"
+                    staticIps: "{$.props.vms.Node_Master}"
+                  output:
+                    masterIp: ips
+              - add-yarn:
+                  action: chefrun
+                  precedingPhases: [ provision-master-node ]
+                  parameters:
+                    isSudo: true
+                    isSolo: true
+                    roles: [ "master" ]
+                    recipeUrl: "{$.cookbooks_url}"
+                    runList: [ "recipe[cloudera::yarn]" ]
+                    jattrs:
+                      java:
+                        java_home: "/usr/java/jdk6"
+                      cloudera:
+                        master:
+                          host: "{$.props.vms.Node_Master_DNS}"
+                        manager:
+                          host: "{$.props.vms.Node_Manager_DNS}"
+                          version: "{$.cloudera_manager_version}"
+                        datanodes:
+                          hosts: "{$.props.vms.DataNodesDNS}"
+                        hadoop:
+                          version: "{$.cloudera_hadoop_version}"
+                        repository_url: "{$.repository_url}" 
+            return:
+              - Resource_Manager_Uri:
+                  description: "Resource manager url"
+                  value: "http://{$.props.vms.Node_Manager_DNS}:8088"
+              - Job_History_Uri:
+                  description: "Job History server url"
+                  value: "http://{$.props.vms.Node_Master_DNS}:19888"
