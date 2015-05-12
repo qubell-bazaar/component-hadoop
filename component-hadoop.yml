@@ -3,14 +3,14 @@ application:
     ##configuration.ami: "us-west-1/ami-0e073d4b"
     configuration.datanodes_quantity: 5
     configuration.cluster_prefix: "CDH"
-    configuration.cookbooks_url: "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-ab7e5d7.tar.gz"
+    configuration.cookbooks_url: "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-e1a893c.tar.gz"
     configuration.repository_url: "http://archive.cloudera.com"
     configuration.cloudera_hadoop_version: "5.1.3"
     configuration.cloudera_manager_version: "5.1.3"
     configuration.cloudera_search_version: "1.3.0"
     configuration.cloudera_impala_version: "1.4.0"
     configuration.metastore_root_password: "hive"
-    compute-config.hardwareId: "m3.large"
+    compute-config.hardwareId: "m3.xlarge"
     compute-config.imageId:    "ami-ee698586"
     compute-config.login:      "root"
     compute-config.locationId: "us-east-1"
@@ -23,23 +23,23 @@ application:
     configuration:
       datanodes_quantity: "bind(cluster#configuration.quantity)"
       cluster_prefix: "bind(vms#input.cluster_prefix)"
-      cookbooks_url: "bind(vms#input.cookbooks_url, cloudera-manager#configuration.cookbooks_url, cloudera-hadoop#configuration.cookbooks_url, cloudera-hive#configuration.cookbooks_url, cloudera-oozie#configuration.cookbooks_url, cloudera-impala#configuration.cookbooks_url, cloudera-sqoop#configuration.cookbooks_url, cloudera-flume#configuration.cookbooks_url, cloudera-pig#configuration.cookbooks_url, cloudera-solr#configuration.cookbooks_url, cloudera-hue#configuration.cookbooks_url)"
-      repository_url: "bind(cloudera-manager#configuration.repository_url, cloudera-hadoop#configuration.repository_url, cloudera-hive#configuration.repository_url, cloudera-oozie#configuration.repository_url, cloudera-impala#configuration.repository_url, cloudera-sqoop#configuration.repository_url, cloudera-flume#configuration.repository_url, cloudera-pig#configuration.repository_url, cloudera-solr#configuration.repository_url, cloudera-hue#configuration.repository_url)"
-      cloudera_manager_version: "bind(cloudera-manager#configuration.cloudera_manager_version, cloudera-hadoop#configuration.cloudera_manager_version, cloudera-hive#configuration.cloudera_manager_version, cloudera-oozie#configuration.cloudera_manager_version, cloudera-impala#configuration.cloudera_manager_version, cloudera-sqoop#configuration.cloudera_manager_version, cloudera-solr#configuration.cloudera_manager_version, cloudera-hue#configuration.cloudera_manager_version)"
-      cloudera_hadoop_version: "bind(cloudera-hadoop#configuration.cloudera_hadoop_version,cloudera-hive#configuration.cloudera_hadoop_version, cloudera-oozie#configuration.cloudera_hadoop_version, cloudera-impala#configuration.cloudera_hadoop_version, cloudera-sqoop#configuration.cloudera_hadoop_version, cloudera-flume#configuration.cloudera_hadoop_version, cloudera-pig#configuration.cloudera_hadoop_version, cloudera-solr#configuration.cloudera_hadoop_version, cloudera-hue#configuration.cloudera_hadoop_version)"
+      cookbooks_url: "bind(vms#input.cookbooks_url, cloudera-manager#configuration.cookbooks_url, cloudera-hadoop#configuration.cookbooks_url, cloudera-hive#configuration.cookbooks_url, cloudera-oozie#configuration.cookbooks_url, cloudera-impala#configuration.cookbooks_url, cloudera-sqoop#configuration.cookbooks_url, cloudera-flume#configuration.cookbooks_url, cloudera-pig#configuration.cookbooks_url, cloudera-solr#configuration.cookbooks_url, cloudera-yarn#configuration.cookbooks_url, cloudera-spark#configuration.cookbooks_url, cloudera-hue#configuration.cookbooks_url)"
+      repository_url: "bind(cloudera-manager#configuration.repository_url, cloudera-hadoop#configuration.repository_url, cloudera-hive#configuration.repository_url, cloudera-oozie#configuration.repository_url, cloudera-impala#configuration.repository_url, cloudera-sqoop#configuration.repository_url, cloudera-flume#configuration.repository_url, cloudera-pig#configuration.repository_url, cloudera-solr#configuration.repository_url, cloudera-yarn#configuration.repository_url, cloudera-spark#configuration.repository_url, cloudera-hue#configuration.repository_url)"
+      cloudera_manager_version: "bind(cloudera-manager#configuration.cloudera_manager_version, cloudera-hadoop#configuration.cloudera_manager_version, cloudera-hive#configuration.cloudera_manager_version, cloudera-oozie#configuration.cloudera_manager_version, cloudera-impala#configuration.cloudera_manager_version, cloudera-sqoop#configuration.cloudera_manager_version, cloudera-solr#configuration.cloudera_manager_version, cloudera-yarn#configuration.cloudera_manager_version, cloudera-spark#configuration.cloudera_manager_version, cloudera-hue#configuration.cloudera_manager_version)"
+      cloudera_hadoop_version: "bind(cloudera-hadoop#configuration.cloudera_hadoop_version,cloudera-hive#configuration.cloudera_hadoop_version, cloudera-oozie#configuration.cloudera_hadoop_version, cloudera-impala#configuration.cloudera_hadoop_version, cloudera-sqoop#configuration.cloudera_hadoop_version, cloudera-flume#configuration.cloudera_hadoop_version, cloudera-pig#configuration.cloudera_hadoop_version, cloudera-solr#configuration.cloudera_hadoop_version, cloudera-yarn#configuration.cloudera_hadoop_version, cloudera-spark#configuration.cloudera_hadoop_version, cloudera-hue#configuration.cloudera_hadoop_version)"
       metastore_root_password: "bind(cloudera-hive#configuration.metastore_root_password)"
       cloudera_impala_version: "bind(cloudera-impala#configuration.cloudera_impala_version)"
       cloudera_search_version: "bind(cloudera-solr#configuration.cloudera_search_version)"
     compute-config:
-      hardwareId: "bind(compute-Master#configuration.hardwareId, compute-Manager#configuration.hardwareId)"
-      imageId:    "bind(compute-Master#configuration.imageId, compute-Manager#configuration.imageId)"
-      login:      "bind(compute-Master#configuration.login, compute-Manager#configuration.login)"
-      locationId: "bind(compute-Master#configuration.locationId, compute-Manager#configuration.locationId)"
+      hardwareId: "bind(compute-Manager#configuration.hardwareId)"
+      imageId:    "bind(compute-Manager#configuration.imageId)"
+      login:      "bind(compute-Manager#configuration.login)"
+      locationId: "bind(compute-Manager#configuration.locationId)"
     compute-datanode-config:
-      hardwareId: "bind(cluster.compute-DataNodes#configuration.hardwareId)"
-      imageId:    "bind(cluster.compute-DataNodes#configuration.imageId)"
-      login:      "bind(cluster.compute-DataNodes#configuration.login)"
-      locationId: "bind(cluster.compute-DataNodes#configuration.locationId)"
+      hardwareId: "bind(compute-Master#configuration.hardwareId, cluster.compute-DataNodes#configuration.hardwareId)"
+      imageId:    "bind(compute-Master#configuration.imageId, cluster.compute-DataNodes#configuration.imageId)"
+      login:      "bind(compute-Master#configuration.login, cluster.compute-DataNodes#configuration.login)"
+      locationId: "bind(compute-Master#configuration.locationId, cluster.compute-DataNodes#configuration.locationId)"
     Cloudera:
       application-pic: "bind(metadata#output.application-pic)"
       manager: "bind(cloudera-manager#cloudera-manager.Manager_URL)"
@@ -56,6 +56,8 @@ application:
     - [vms#compute-DataNodes, cluster.compute-DataNodes]
     - [compute-Master, cloudera-manager#compute-Master]
     - [compute-Master, cloudera-solr#compute-Master]
+    - [compute-Master, cloudera-yarn#compute-Master]
+    - [compute-Master, cloudera-spark#compute-Master]
     - [compute-Master, cloudera-flume#compute-Master]
     - [compute-Master, cloudera-sqoop#compute-Master]
     - [compute-Master, cloudera-impala#compute-Master]
@@ -63,6 +65,8 @@ application:
     - [compute-Manager, cloudera-manager#compute-Manager]
     - [compute-Manager, cloudera-hue#compute-Manager]
     - [compute-Manager, cloudera-solr#compute-Manager]
+    - [compute-Manager, cloudera-yarn#compute-Manager]
+    - [compute-Manager, cloudera-spark#compute-Manager]
     - [compute-Manager, cloudera-pig#compute-Manager]
     - [compute-Manager, cloudera-flume#compute-Manager]
     - [compute-Manager, cloudera-impala#compute-Manager]
@@ -72,6 +76,8 @@ application:
     - [cluster.compute-DataNodes, cloudera-hadoop#compute-DataNodes]
     - [cluster.compute-DataNodes, cloudera-manager#compute-DataNodes]
     - [cluster.compute-DataNodes, cloudera-solr#compute-DataNodes]
+    - [cluster.compute-DataNodes, cloudera-yarn#compute-DataNodes]
+    - [cluster.compute-DataNodes, cloudera-spark#compute-DataNodes]
     - [cluster.compute-DataNodes, cloudera-flume#compute-DataNodes]
     - [cluster.compute-DataNodes, cloudera-impala#compute-DataNodes]
     - [cluster.compute-DataNodes, cloudera-hive#compute-DataNodes]
@@ -85,7 +91,10 @@ application:
     - [vms, cloudera-pig]
     - [vms, cloudera-solr]
     - [vms, cloudera-hue]
+    - [vms, cloudera-yarn]
+    - [vms, cloudera-spark]
     - [cloudera-hadoop, cloudera-manager]
+    - [cloudera-hadoop, cloudera-yarn]
     - [cloudera-hive, cloudera-hadoop]
     - [cloudera-oozie, cloudera-hive]
     - [cloudera-impala, cloudera-oozie]
@@ -93,6 +102,7 @@ application:
     - [cloudera-flume, cloudera-sqoop]
     - [cloudera-pig, cloudera-flume]
     - [cloudera-solr, cloudera-pig]
+    - [cloudera-spark, cloudera-yarn]
     - [cloudera-hue, cloudera-solr]
     - [monitoring, compute-Manager]
     - [monitoring, vms]
@@ -798,6 +808,111 @@ application:
           Solr_Uri:
             type: publish-signal(list<string>)
             name: Solr connection string
+    cloudera-yarn:
+      type: reference.Submodule
+      configuration:
+        __locator.application-id: "Cloudera Yarn"
+      required: [vms, cloudera-hadoop, compute-Manager, compute-Master, compute-DataNodes]
+      interfaces:
+        configuration:
+          repository_url:
+            type: configuration(string)
+            name: Cloudera RPM repository
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+          cloudera_hadoop_version:
+            type: configuration(string)
+            name: Cloudera Hadoop version
+          cloudera_manager_version:
+            type: configuration(string)
+            name: Cloudera Manager version
+        compute-Master:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-Manager:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-DataNodes:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        vms:
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master_DNS: consume-signal(string)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-hadoop:
+          NameNode: consume-signal(list<string>)
+          Primary_NameNode: consume-signal(list<string>)
+          Secondary_NameNode: consume-signal(list<string>)
+          Hbase_Master: consume-signal(list<string>)
+          Hbase_MasterDns: consume-signal(string)
+          JobTracker: consume-signal(list<string>)
+          cloudera_hdfsWebui: consume-signal(list<string>)
+          cloudera_jobtrackerWebui: consume-signal(list<string>)
+          cloudera_hbaseWebui: consume-signal(list<string>)
+        cloudera-yarn:
+          Resource_Manager_Uri:
+            type: publish-signal(string)
+            name: Yarn Resource Manager
+          Job_History_Uri:
+            type: publish-signal(string)
+            name: Yarn Job History
+    cloudera-spark:
+      type: reference.Submodule
+      configuration:
+        __locator.application-id: "Cloudera Spark"
+      required: [vms, cloudera-yarn, compute-Manager, compute-Master, compute-DataNodes]
+      interfaces:
+        configuration:
+          repository_url:
+            type: configuration(string)
+            name: Cloudera RPM repository
+          cookbooks_url:
+            type: configuration(string)
+            name: Chef cookbooks
+          cloudera_hadoop_version:
+            type: configuration(string)
+            name: Cloudera Hadoop version
+          cloudera_manager_version:
+            type: configuration(string)
+            name: Cloudera Manager version
+        compute-Master:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-Manager:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-DataNodes:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        vms:
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master_DNS: consume-signal(string)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-yarn:
+          Resource_Manager_Uri:
+            type: consume-signal(string)
+            name: Yarn Resource_Manager_Uri
+          Job_History_Uri:
+            type: consume-signal(string)
+            name: Yarn Job_History_Uri
+        cloudera-spark:
+          Spark_History_Uri:
+            type: publish-signal(string)
+            name: Yarn Job_History_Uri
+        
     cloudera-hue:
       type: reference.Submodule
       configuration:

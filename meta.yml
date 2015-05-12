@@ -1,6 +1,6 @@
 kit:
   name: "Cloudera Hadoop"
-  link: https://github.com/loky9000/component-hadoop
+  link: https://github.com/qubell-bazaar/component-hadoop
   applications:
     - name: "CharacterCount"
       manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/3.0-39p/sample-app.yml"
@@ -26,6 +26,10 @@ kit:
       manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/3.0-39p/cloudera-solr.yml"
     - name: "Cloudera Sqoop"
       manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/3.0-39p/cloudera-sqoop.yml"
+    - name: "Cloudera Yarn"
+      manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/3.0-39p/cloudera-yarn.yml"
+    - name: "Cloudera Spark"
+      manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/3.0-39p/cloudera-spark.yml"
   provider:
     name: "Qubell"
     link: http://qubell.com

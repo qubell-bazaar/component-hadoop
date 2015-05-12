@@ -1,0 +1,122 @@
+application:
+  configuration:
+    configuration.cookbooks_url: "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-v5.tar.gz"
+    configuration.repository_url: "http://archive.cloudera.com"
+    configuration.cloudera_hadoop_version: "5.1.3"
+    configuration.cloudera_manager_version: "5.1.3"
+  interfaces:
+    configuration:
+      cookbooks_url: "bind(cloudera-spark#input.cookbooks_url)"
+      repository_url: "bind(cloudera-spark#input.repository_url)"
+      cloudera_hadoop_version: "bind(cloudera-spark#input.cloudera_hadoop_version)"
+      cloudera_manager_version: "bind(cloudera-spark#input.cloudera_manager_version)"
+    compute-Manager: 
+      "*": "bind(cloudera-spark#compute-Manager.*)"
+    compute-Master:  
+      "*": "bind(cloudera-spark#compute-Master.*)"
+    compute-DataNodes:
+      "*": "bind(cloudera-spark#compute-DataNodes.*)"
+    vms:
+      Node_Manager_DNS: "bind(cloudera-spark#vms.Node_Manager_DNS)"
+      Node_Master_DNS: "bind(cloudera-spark#vms.Node_Master_DNS)"
+      DataNodesDNS: "bind(cloudera-spark#vms.DataNodesDNS)"
+    cloudera-yarn:
+      Resource_Manager_Uri: "bind(cloudera-spark#cloudera-yarn.Resource_Manager_Uri)"
+      Job_History_Uri: "bind(cloudera-spark#cloudera-yarn.Job_History_Uri)"
+    cloudera-spark:
+      Spark_History_Uri: "bind(cloudera-spark#result.Spark_History_Uri)"
+  components:
+    cloudera-spark:
+      type: workflow.Instance
+      interfaces:
+        input:
+          repository_url: configuration(string)
+          cookbooks_url: configuration(string)
+          cloudera_hadoop_version: configuration(string)
+          cloudera_manager_version: configuration(string)
+        compute-Master:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-Manager:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        compute-DataNodes:
+          networks:        consume-signal(map<string, map<string, string>>)
+          exec:            send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:        send-command(string filename, bytes payload)
+          get-file:        send-command(string filename => bytes payload)
+        vms:
+          Node_Manager_DNS: consume-signal(string)
+          Node_Master_DNS: consume-signal(string)
+          DataNodesDNS: consume-signal(list<string>)
+        cloudera-yarn:
+          Resource_Manager_Uri: consume-signal(string)
+          Job_History_Uri: consume-signal(string)
+        result:
+          Spark_History_Uri:
+            type: publish-signal(string)
+            name: Spark History Server
+      required: [vms, cloudera-yarn, compute-Manager, compute-Master, compute-DataNodes]
+      configuration:
+        configuration.triggers: {}
+        configuration.workflows:
+          launch:
+            steps:
+              - get-signals:
+                  action: getSignals
+                  parameters:
+                    multi: true
+                  output:
+                    signals: result
+              - install-spark-pkg:
+                  action: chefrun
+                  precedingPhases: [ get-signals ]
+                  parameters:
+                    isSudo: true
+                    isSolo: true
+                    roles: [ "compute-Master" ]
+                    recipeUrl: "{$.cookbooks_url}"
+                    runList: [ "recipe[cloudera::spark_pkg]" ]
+                    retryCount: 2
+                    jattrs:
+                      java:
+                        java_home: "/usr/java/jdk6"
+                      cloudera:
+                        hadoop:
+                          version: "{$.cloudera_hadoop_version}"
+                        manager:
+                          version: "{$.cloudera_manager_version}"
+                        repository_url: "{$.repository_url}"
+              - add-spark-on-yarn:
+                  action: chefrun
+                  phase: add-spark-on-yarn
+                  precedingPhases: [ install-spark-pkg ]
+                  parameters:
+                    isSudo: true
+                    isSolo: true
+                    roles: [ "compute-Master" ]
+                    recipeUrl: "{$.cookbooks_url}"
+                    runList: [ "recipe[cloudera::spark]" ]
+                    jattrs:
+                      java:
+                        java_home: "/usr/java/jdk6"
+                      cloudera:
+                        master:
+                          host: "{$.signals.vms.*.Node_Master_DNS[0]}"
+                        manager:
+                          host: "{$.signals.vms.*.Node_Manager_DNS[0]}"
+                          version: "{$.cloudera_manager_version}"
+                        datanodes:
+                          hosts: "{$.signals.vms.*.DataNodesDNS}"
+                        hadoop:
+                          version: "{$.cloudera_hadoop_version}"
+                        repository_url: "{$.repository_url}"
+              
+            return:
+              - Spark_History_Uri:
+                  description: "Job History server url"
+                  value: "http://{$.signals.vms.*.Node_Master_DNS[0]}:18088"
