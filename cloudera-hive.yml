@@ -135,62 +135,9 @@ application:
                     staticIps: "{$.props.vms.Node_Master}"
                   output:
                     masterIp: ips
-              - packages-hive:
-                  action: chefrun
-                  precedingPhases: [ provision-manager-node, provision-datanode, provision-master-node ]
-                  parameters:
-                    isSudo: true
-                    isSolo: true
-                    roles: [ "manager" ]
-                    recipeUrl: "{$.cookbooks_url}"
-                    runList: [ "recipe[cloudera::hive_rc]" ]
-                    retryCount: 2
-                    jattrs:
-                      java:
-                        java_home: "/usr/java/jdk6"
-                      cloudera:
-                        master:
-                          host: "{$.props.vms.Node_Master_DNS}"
-                        manager:
-                          host: "{$.props.vms.Node_Manager_DNS}"
-                          version: "{$.cloudera_manager_version}"
-                        datanodes:
-                          hosts: "{$.props.vms.DataNodesDNS}"
-                        hadoop:
-                          version: "{$.cloudera_hadoop_version}"
-                        repository_url: "{$.repository_url}"
-                      mysql:
-                        server_debian_password: "{$.metastore_root_password}"
-                        server_root_password: "{$.metastore_root_password}"
-                        server_repl_password: "{$.metastore_root_password}"
-                        bind_address: "127.0.0.1"
-
-              - packages-client-hive:
-                  action: chefrun
-                  precedingPhases: [ packages-hive ]
-                  parameters:
-                      isSudo: true
-                      isSolo: true
-                      roles: [ "master", "datanode" ]
-                      recipeUrl: "{$.cookbooks_url}"
-                      runList: [ "recipe[cloudera::hive_client_pkg]" ]
-                      retryCount: 2
-                      jattrs:
-                        java:
-                          java_home: "/usr/java/jdk6"
-                        cloudera:
-                          master:
-                            host: "{$.props.vms.Node_Master_DNS}"
-                          manager:
-                            host: "{$.props.vms.Node_Manager_DNS}"
-                            version: "{$.cloudera_manager_version}"
-                          hadoop:
-                            version: "{$.cloudera_hadoop_version}"
-                          repository_url: "{$.repository_url}"
-
               - services-hive:
                   action: chefrun
-                  precedingPhases: [ packages-client-hive ]
+                  precedingPhases: [ provision-manager-node ]
                   parameters:
                       isSudo: true
                       isSolo: true

@@ -18,6 +18,7 @@ from qubell.api.testing import *
 })
 class ClouderaHadoopComponentTestCase(BaseComponentTestCase):
     name = "CDH Main"
+    destroy_interval = int(os.environ.get('DESTROY_INTERVAL', 1000*60*60*2))
     #meta = os.path.realpath(os.path.join(os.path.dirname(__file__), '../meta.yml'))
     apps = [
        {"name": name,

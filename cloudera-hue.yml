@@ -19,8 +19,12 @@ application:
       Node_Master_DNS: "bind(cloudera-hue#vms.Node_Master_DNS)"
       DataNodes: "bind(cloudera-hue#vms.DataNodes)"
       DataNodesDNS: "bind(cloudera-hue#vms.DataNodesDNS)"
+    cloudera-impala:
+      "*": "bind(cloudera-hue#cloudera-impala.*)"
+    cloudera-sqoop:
+      "*": "bind(cloudera-hue#cloudera-sqoop.*)"
     cloudera-solr:
-      Solr_Uri: "bind(cloudera-hue#cloudera-solr.Solr_Uri)"
+      "*": "bind(cloudera-hue#cloudera-solr.*)"
     cloudera-hue:
       hue_url: "bind(cloudera-hue#result.hue_url)"
       application-pic: "bind(metadata#output.application-pic)"
@@ -54,13 +58,17 @@ application:
           Node_Master_DNS: consume-signal(string)
           DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
+        cloudera-impala:
+          Impala_Master: consume-signal(list<string>)
+        cloudera-sqoop:
+          Sqoop_Master: consume-signal(list<string>)
         cloudera-solr:
           Solr_Uri: consume-signal(list<string>)
         result:
           hue_url:
             type: publish-signal(list<string>)
             name: Hue URL
-      required: [vms, cloudera-solr]
+      required: [vms, cloudera-solr, cloudera-impala, cloudera-sqoop]
       configuration:
         configuration.triggers: {}
         configuration.workflows:

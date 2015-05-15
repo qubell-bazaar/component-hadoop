@@ -92,29 +92,10 @@ application:
                     staticIps: "{$.props.vms.Node_Master}"
                   output:
                     masterIp: ips
-              - install-spark-pkg:
-                  action: chefrun
-                  precedingPhases: [ provision-master-node ]
-                  parameters:
-                    isSudo: true
-                    isSolo: true
-                    roles: [ "master" ]
-                    recipeUrl: "{$.cookbooks_url}"
-                    runList: [ "recipe[cloudera::spark_pkg]" ]
-                    retryCount: 2
-                    jattrs:
-                      java:
-                        java_home: "/usr/java/jdk6"
-                      cloudera:
-                        hadoop:
-                          version: "{$.cloudera_hadoop_version}"
-                        manager:
-                          version: "{$.cloudera_manager_version}"
-                        repository_url: "{$.repository_url}"
               - add-spark-on-yarn:
                   action: chefrun
                   phase: add-spark-on-yarn
-                  precedingPhases: [ install-spark-pkg ]
+                  precedingPhases: [ provision-master-node ]
                   parameters:
                     isSudo: true
                     isSolo: true

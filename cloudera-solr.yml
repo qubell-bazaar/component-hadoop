@@ -21,8 +21,8 @@ application:
       Node_Master_DNS: "bind(cloudera-solr#vms.Node_Master_DNS)"
       DataNodes: "bind(cloudera-solr#vms.DataNodes)"
       DataNodesDNS: "bind(cloudera-solr#vms.DataNodesDNS)"
-    cloudera-pig:
-      Pig_Status: "bind(cloudera-solr#cloudera-pig.Pig_Status)"
+    cloudera-hadoop:
+      "*": "bind(cloudera-solr#cloudera-hadoop.*)"
     cloudera-solr:
       Solr_Uri: "bind(cloudera-solr#result.Solr_Uri)"
   components:
@@ -43,13 +43,21 @@ application:
           Node_Master_DNS: consume-signal(string)
           DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
-        cloudera-pig:
-          Pig_Status: consume-signal(string)
+        cloudera-hadoop:
+          NameNode: consume-signal(list<string>)
+          Primary_NameNode: consume-signal(list<string>)
+          Secondary_NameNode: consume-signal(list<string>)
+          Hbase_Master: consume-signal(list<string>)
+          Hbase_MasterDns: consume-signal(string)
+          JobTracker: consume-signal(list<string>)
+          cloudera_hdfsWebui: consume-signal(list<string>)
+          cloudera_jobtrackerWebui: consume-signal(list<string>)
+          cloudera_hbaseWebui: consume-signal(list<string>)
         result:
           Solr_Uri:
             type: publish-signal(list<string>)
             name: Solr URI
-      required: [vms, cloudera-pig]
+      required: [vms, cloudera-hadoop]
       configuration:
         configuration.triggers: {}
         configuration.workflows:
@@ -89,31 +97,10 @@ application:
                     staticIps: "{$.props.vms.Node_Master}"
                   output:
                     masterIp: ips
-              - install-solr-pkg:
-                  action: chefrun
-                  precedingPhases: [ provision-manager-node, provision-datanode, provision-master-node ]
-                  parameters:
-                    isSudo: true
-                    isSolo: true
-                    roles: [ "master", "manager", "datanode" ]
-                    recipeUrl: "{$.cookbooks_url}"
-                    runList: [ "recipe[cloudera::solr_pkg]" ]
-                    retryCount: 2
-                    jattrs:
-                      java:
-                        java_home: "/usr/java/jdk6"
-                      cloudera:
-                        search:
-                          version: "{$.cloudera_search_version}"
-                        hadoop:
-                          version: "{$.cloudera_hadoop_version}"
-                        manager:
-                          version: "{$.cloudera_manager_version}"
-                        repository_url: "{$.repository_url}"
               - start-solr:
                   action: chefrun
                   phase: start-solr
-                  precedingPhases: [ install-solr-pkg ]
+                  precedingPhases: [ provision-master-node ]
                   parameters:
                     isSudo: true
                     isSolo: true
