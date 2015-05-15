@@ -77,23 +77,6 @@ application:
                     staticIps: "{$.props.vms.Node_Manager}"
                   output:
                     managerIp: ips
-              - install-pig:
-                  action: chefrun
-                  precedingPhases: [ provision-manager-node ]
-                  parameters:
-                    isSudo: true
-                    isSolo: true
-                    roles: [ "manager" ]
-                    recipeUrl: "{$.cookbooks_url}"
-                    runList: [ "recipe[cloudera::pig]" ]
-                    retryCount: 2
-                    jattrs:
-                      java:
-                        java_home: "/usr/java/jdk6"
-                      cloudera:
-                        hadoop:
-                          version: "{$.cloudera_hadoop_version}"
-                        repository_url: "{$.repository_url}"
             return:
               - Pig_Status:
                   value: "Installed"

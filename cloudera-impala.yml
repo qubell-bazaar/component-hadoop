@@ -21,8 +21,9 @@ application:
       Node_Master_DNS: "bind(cloudera-impala#vms.Node_Master_DNS)"
       DataNodes: "bind(cloudera-impala#vms.DataNodes)"
       DataNodesDNS: "bind(cloudera-impala#vms.DataNodesDNS)"
-    cloudera-oozie:
-      Oozie_Server: "bind(cloudera-impala#cloudera-oozie.Oozie_Server)"
+    cloudera-hive:
+      Hive_Server: "bind(cloudera-impala#cloudera-hive.Hive_Server)"
+      Hive_Metastore: "bind(cloudera-impala#cloudera-hive.Hive_Metastore)"
     cloudera-impala:
       Impala_Master: "bind(cloudera-impala#result.Impala_Master)"
   components:
@@ -43,13 +44,14 @@ application:
           Node_Master_DNS: consume-signal(string)
           DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
-        cloudera-oozie:
-          Oozie_Server: consume-signal(list<string>)
+        cloudera-hive:
+          Hive_Server: consume-signal(list<string>)
+          Hive_Metastore: consume-signal(list<string>)
         result:
           Impala_Master:
             type: publish-signal(list<string>)
             name: Impala master server
-      required: [vms, cloudera-oozie]
+      required: [vms, cloudera-hive]
       configuration:
         configuration.triggers: {}
         configuration.workflows:
@@ -89,28 +91,9 @@ application:
                     staticIps: "{$.props.vms.Node_Master}"
                   output:
                     masterIp: ips
-              - install-impala-pkg:
-                  action: chefrun
-                  precedingPhases: [ provision-manager-node, provision-datanode, provision-master-node ]
-                  parameters:
-                    isSudo: true
-                    isSolo: true
-                    roles: [ "master", "manager", "datanode" ]
-                    recipeUrl: "{$.cookbooks_url}"
-                    runList: [ "recipe[cloudera::impala_pkg]" ]
-                    retryCount: 2
-                    jattrs:
-                      cloudera:
-                        impala:
-                          version: "{$.cloudera_impala_version}"
-                        hadoop:
-                          version: "{$.cloudera_hadoop_version}"
-                        manager:
-                          version: "{$.cloudera_manager_version}"
-                        repository_url: "{$.repository_url}"
               - start-impala:
                   action: chefrun
-                  precedingPhases: [ install-impala-pkg ]
+                  precedingPhases: [ provision-master-node ]
                   parameters:
                     isSudo: true
                     isSolo: true

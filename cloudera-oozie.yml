@@ -19,9 +19,8 @@ application:
       Node_Master_DNS: "bind(cloudera-oozie#vms.Node_Master_DNS)"
       DataNodes: "bind(cloudera-oozie#vms.DataNodes)"
       DataNodesDNS: "bind(cloudera-oozie#vms.DataNodesDNS)"
-    cloudera-hive:
-      Hive_Server: "bind(cloudera-oozie#cloudera-hive.Hive_Server)"
-      Hive_Metastore: "bind(cloudera-oozie#cloudera-hive.Hive_Metastore)"
+    cloudera-hadoop:
+      "*": "bind(cloudera-oozie#cloudera-hadoop.*)"
     cloudera-oozie:
       Oozie_Server: "bind(cloudera-oozie#result.Oozie_Server)"
       Oozie_Web: "bind(cloudera-oozie#result.Oozie_Web)"
@@ -61,9 +60,16 @@ application:
           Node_Master_DNS: consume-signal(string)
           DataNodes: consume-signal(list<string>)
           DataNodesDNS: consume-signal(list<string>)
-        cloudera-hive:
-          Hive_Server: consume-signal(list<string>)
-          Hive_Metastore: consume-signal(list<string>)
+        cloudera-hadoop:
+          NameNode: consume-signal(list<string>)
+          Primary_NameNode: consume-signal(list<string>)
+          Secondary_NameNode: consume-signal(list<string>)
+          Hbase_Master: consume-signal(list<string>)
+          Hbase_MasterDns: consume-signal(string)
+          JobTracker: consume-signal(list<string>)
+          cloudera_hdfsWebui: consume-signal(list<string>)
+          cloudera_jobtrackerWebui: consume-signal(list<string>)
+          cloudera_hbaseWebui: consume-signal(list<string>)
         result:
           Oozie_Server:
             type: publish-signal(list<string>)
@@ -71,7 +77,7 @@ application:
           Oozie_Web:
             type: publish-signal(string)
             name: Oozie web UI
-      required: [vms, cloudera-hive]
+      required: [vms, cloudera-hadoop]
       configuration:
         configuration.triggers: {}
         configuration.workflows:
