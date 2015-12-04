@@ -7,7 +7,7 @@ application:
     input.datanode_hardware: "m3.large"
     input.datanodes_quantity: "5"
     input.cluster_prefix: "CDH"
-    input.cookbooks_url: "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-615f86b.tar.gz"
+    input.cookbooks_url: "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-hadoop-cookbooks-stable-94b1c8f.tar.gz"
     input.repository_url: "http://archive.cloudera.com"
     input.cloudera_hadoop_version: "5.2.0"
     input.cloudera_manager_version: "5.2.0"
