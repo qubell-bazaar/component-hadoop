@@ -22,7 +22,7 @@ Features
 Configurations
 --------------
  - Cloudera Hadoop 4.4.0, CentOS 6.4 (us-east-1/ami-ee698586, us-west-1/ami-0e073d4b), AWS EC2 m3.large, root
- - Cloudera Hadoop 5.1.3, CentOS 6.4 (us-east-1/ami-ee698586, us-west-1/ami-0e073d4b), AWS EC2 m3.large, root
+ - Cloudera Hadoop 5.2.0, CentOS 6.4 (us-east-1/ami-ee698586, us-west-1/ami-0e073d4b), AWS EC2 m3.large, root
 
 Pre-requisites
 --------------

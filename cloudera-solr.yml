@@ -107,6 +107,7 @@ application:
                     roles: [ "master" ]
                     recipeUrl: "{$.cookbooks_url}"
                     runList: [ "recipe[cloudera::solr_start]" ]
+                    retryCount: 3
                     jattrs:
                       java:
                         java_home: "/usr/java/jdk6"
