@@ -1,6 +1,16 @@
 import os
 
 from qubell.api.testing import *
+from qubell.api.tools import retry
+
+def eventually(*exceptions):
+    """
+    Method decorator, that waits when something inside eventually happens
+    Note: 'sum([delay*backoff**i for i in range(tries)])' ~= 580 seconds ~= 10 minutes
+    :param exceptions: same as except parameter, if not specified, valid return indicated success
+    :return:
+    """
+    return retry(tries=50, delay=0.5, backoff=1.1, retry_exception=exceptions)
 
 @environment({
     "default": {},
@@ -83,5 +93,9 @@ class ClouderaHadoopComponentTestCase(BaseComponentTestCase):
       timeout = 10
       socket.setdefaulttimeout(timeout)
       url = instance.returnValues['Cloudera.manager']
-      response = requests.get(url, auth=requests.auth.HTTPBasicAuth('admin', 'admin'))
-      self.assertEqual(200, response.status_code)
+      
+      @eventually(AssertionError)
+      def eventually_assert():
+        response = requests.get(url, auth=requests.auth.HTTPBasicAuth('admin', 'admin'))
+        self.assertEqual(200, response.status_code)
+      eventually_assert()
