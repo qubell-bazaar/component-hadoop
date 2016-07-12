@@ -73,7 +73,7 @@ application:
                             - upload-data:
                                 action: hadoop.upload-data
                                 parameters:
-                                    commandCallTimeout: 600
+                                    commandCallTimeout: 2 hours
                                     archive-url: "{$.dataset-url}"
                                 output:
                                     data-dir: data-dir
@@ -82,7 +82,7 @@ application:
                                 action: hadoop.run-workflow
                                 precedingPhases: [ upload-data ]
                                 parameters:
-                                    commandCallTimeout: 3600
+                                    commandCallTimeout: 1 hour
                                     archive-url: "{$.workflow-url}"
                                     data-dir: "{$.data-dir}"
                                 output:
