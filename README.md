@@ -1,7 +1,7 @@
 component-hadoop
 ================
 
-Version 2.6-43p
+Version 2.7-47p
 -------------
 
 <img src="http://hadoop.apache.org/images/hadoop-logo.jpg" width="100px">
@@ -12,7 +12,7 @@ Version 2.6-43p
 
 Installs and configures Cloudera Hadoop
 
-[![Install](https://raw.github.com/qubell-bazaar/component-skeleton/master/img/install.png)](https://express.tonomi.com/applications/upload?metadataUrl=https://raw.github.com/qubell-bazaar/component-hadoop/2.6-43p/meta.yml)
+[![Install](https://raw.github.com/qubell-bazaar/component-skeleton/master/img/install.png)](https://express.tonomi.com/applications/upload?metadataUrl=https://raw.github.com/qubell-bazaar/component-hadoop/2.7-47p/meta.yml)
 
 Features
 --------
