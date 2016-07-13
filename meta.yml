@@ -9,7 +9,7 @@ kit:
     - name: "Cloudera Flume"
       manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.7-47p/cloudera-flume.yml"
     - name: "Cloudera Hadoop"
-      manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.6-47p/cloudera-hadoop.yml"
+      manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.7-47p/cloudera-hadoop.yml"
     - name: "Cloudera Hive"
       manifest: "https://raw.github.com/qubell-bazaar/component-hadoop/2.7-47p/cloudera-hive.yml"
     - name: "Cloudera Hue"
